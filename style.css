@@ -1,0 +1,91 @@
+body {
+    background-color: #112;
+    color: white;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+inline {
+    display: flex;
+    flex-direction: row;
+    gap: 8px;
+    align-items: center;
+}
+
+key {
+    font-family: monospace;
+
+    --color: white;
+
+    color: var(--color);
+
+    border: 2px solid var(--color);
+    aspect-ratio: 1;
+    width: 20px;
+    display: inline;
+    text-align: center;
+}
+
+key[data-pressed=true] {
+    background-color: var(--color);
+    color: #112;
+}
+
+#blanket {
+    background-color: #0009;
+    position: absolute;
+    width: 100vw;
+    height: 100vh;
+    top: 0;
+    left: 0;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#blanket[data-displayed=false] {
+    display: none;
+}
+
+#blanket-placer {
+    display: flex;
+    flex-direction: row;
+    column-gap: 24px;
+}
+
+.choice {
+    background-color: #224;
+    border: 2px solid black;
+    display: flex;
+    flex-direction: column;
+    padding: 36px 24px;
+    border-radius: 8px;
+    width: 200px;
+    align-items: center;
+    row-gap: 24px;
+}
+
+.choice > h2 {
+    margin: 0;
+}
+
+button {
+    min-width: 140px;
+    padding: 4px 12px;
+    background-color: transparent;
+    color: white;
+    border: 2px solid white;
+    border-radius: 2px;
+}
+
+button:not(:disabled):hover {
+    border-color: #0ff;
+}
+
+button:not(:disabled):active {
+    border-color: #f0f;
+}
+
+button:disabled {
+    background-color: #8888;
+}

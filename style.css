@@ -11,6 +11,12 @@ inline {
     align-items: center;
 }
 
+stack {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
 key {
     font-family: monospace;
 
@@ -28,6 +34,12 @@ key {
 key[data-pressed=true] {
     background-color: var(--color);
     color: #112;
+}
+
+#producer-list {
+    display: flex;
+    flex-direction: column;
+    row-gap: 8px;
 }
 
 #blanket {
@@ -62,10 +74,11 @@ key[data-pressed=true] {
     border-radius: 8px;
     width: 200px;
     align-items: center;
+    justify-content: space-between;
     row-gap: 24px;
 }
 
-.choice > h2 {
+stack > h2 {
     margin: 0;
 }
 
@@ -87,5 +100,5 @@ button:not(:disabled):active {
 }
 
 button:disabled {
-    background-color: #8888;
+    opacity: 0.5;
 }

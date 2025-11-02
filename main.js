@@ -1,6 +1,7 @@
 const PRODUCERS = [
-    { name: 'workers', earning: 1, price: 20, priceGrowthRate: 1.1 },
-    { name: 'factory', earning: 20, price: 1000, priceGrowthRate: 1.3 },
+    { id: 'workers', earning: 1, price: 20, priceGrowthRate: 1.1, name: 'Workers' },
+    { id: 'managers', earning: 4, price: 100, priceGrowthRate: 1.2, name: 'Managers' },
+    { id: 'factory', earning: 20, price: 1000, priceGrowthRate: 1.3, name: 'Factories' },
 ];
 
 const PAUSE_KEY = 'p';
@@ -83,19 +84,34 @@ function round(value) {
 
 const N_CHOICES = 3;
 
+const replaceNode = original => {
+    const newCopy = original.cloneNode(true);
+    original.parentNode.replaceChild(newCopy, original);
+
+    return newCopy;
+};
+
+const clearChildren = node => {
+    while (node.firstChild) {
+        node.removeChild(node.firstChild);
+    }
+};
+
 const setupAugment = (element, augment, onSelect) => {
     setById('title', augment.title, element);
     setById('description', augment.description, element);
 
     const oldButton = getById('choose', element);
-    const newButton = oldButton.cloneNode(true);
-    oldButton.parentNode.replaceChild(newButton, oldButton);
+    const newButton = replaceNode(oldButton);
+
     newButton.addEventListener('click', () => {
         onSelect(augment);
     });
 };
 
-function main(augmentsAfter) {
+function main({ augmentsAfter, producers }) {
+    replaceNode(getById('main'));
+
     let lastFrameTime = performance.now();
     let unusedTime = 0;
     const framesTotal = 10 * 60 * FRAMES_PER_SECOND;
@@ -165,15 +181,15 @@ function main(augmentsAfter) {
         setById('money', Math.floor(data.money).toLocaleString());
         setById('lifetime-earnings', Math.floor(data.lifetimeEarnings).toLocaleString());
         setById('earning', round(data.earning));
-        
-        PRODUCERS.forEach(({ name }) => {
-            const entry = data.producers[name];
 
-            setById(`${name}-count`, entry.count);
-            setById(`${name}-earning`, round(entry.earning * entry.profitMulti));
-            setById(`${name}-price`, round(entry.price));
-            
-            getById(`${name}-buy`).disabled = data.money < entry.price;
+        producers.forEach(({ id }) => {
+            const entry = data.producers[id];
+
+            setById(`${id}-count`, entry.count);
+            setById(`${id}-earning`, round(entry.earning * entry.profitMulti));
+            setById(`${id}-price`, round(entry.price));
+
+            getById(`${id}-buy`).disabled = data.money < entry.price;
         });
 
         const timeRate = calculateTimeRate();
@@ -239,20 +255,60 @@ function main(augmentsAfter) {
 
     const pageSetup = () => {
         // Set up producers
-        PRODUCERS.forEach(({ name, ...others }) => {
-            data.producers[name] = {
+        const producerList = getById('producer-list');
+        clearChildren(producerList);
+
+        producers.forEach(({ id, name, ...others }) => {
+            const row = document.createElement('div');
+            row.appendChild(document.createTextNode(`${name}: `));
+
+            const countNode = document.createElement('span');
+            countNode.id = `${id}-count`;
+            countNode.textContent = '0';
+            row.appendChild(countNode);
+
+            row.appendChild(document.createTextNode(', earning: $'));
+
+            const earningNode = document.createElement('span');
+            earningNode.id = `${id}-earning`;
+            earningNode.textContent = round(others.earning);
+            row.appendChild(earningNode);
+
+            row.appendChild(document.createTextNode('/s each.'));
+
+            const buyButton = document.createElement('button');
+            buyButton.id = `${id}-buy`;
+
+            buyButton.appendChild(document.createTextNode('Buy'));
+
+            const descRow = document.createElement('div');
+            descRow.appendChild(document.createTextNode('Cost: $'));
+
+            buyButton.appendChild(descRow);
+
+            const priceSpan = document.createElement('span');
+            priceSpan.id = `${id}-price`;
+            priceSpan.textContent = round(others.price);
+            descRow.appendChild(priceSpan);
+
+            row.appendChild(buyButton);
+
+            producerList.appendChild(row);
+
+            data.producers[id] = {
+                id,
                 name,
                 ...others,
                 profitMulti: 1,
                 count: 0,
             };
-    
-            getById(`${name}-buy`).addEventListener('click', () => {
-                const entry = data.producers[name];
-    
+
+            buyButton.addEventListener('click', () => {
+                const entry = data.producers[id];
+
                 if (data.money >= entry.price) {
                     hasStarted = true;
-    
+
                     data.money -= entry.price;
                     entry.price *= entry.priceGrowthRate;
                     entry.count += 1;
@@ -260,12 +316,10 @@ function main(augmentsAfter) {
                 }
             });
         });
-    
+
         // Set up time box
         const timeKeyBox = getById('time-key-box');
-        while (timeKeyBox.firstChild) {
-            timeKeyBox.removeChild(timeKeyBox.firstChild);
-        }
+        clearChildren(timeKeyBox);
 
         TIME_RATES.forEach(({ key }) => {
             const el = document.createElement('key');
@@ -301,5 +355,5 @@ function main(augmentsAfter) {
 
 window.addEventListener('load', () => {
     const augmentsAfter = [120, 240, 360, 480];
-    main(augmentsAfter);
+    main({ augmentsAfter, producers: PRODUCERS });
 });

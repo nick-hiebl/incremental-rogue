@@ -54,12 +54,30 @@ const AUGMENTS = [
         },
     },
     {
+        id: 'factory-discount',
+        title: 'Discount on factories',
+        description: 'Halves the price of all factories.',
+        action: data => {
+            data.producers['factory'].price *= 0.5;
+        }
+    },
+    {
         id: 'worker-cost-scaling',
         title: 'Worker cost scaling',
-        description: 'The price of each successive worker only increases 90% slower than normal',
+        description: 'The price of each successive worker only increases at 20% the normal speed.',
         action: data => {
             const growthRate = data.producers['workers'].priceGrowthRate;
-            data.producers['workers'].priceGrowthRate = 0.9 * 1 + 0.1 * growthRate;
+            data.producers['workers'].priceGrowthRate = 0.8 * 1 + 0.2 * growthRate;
+        },
+    },
+    {
+        id: 'cashback',
+        title: 'Cashback program',
+        description: 'Get 50% cashback on all money you\'ve spent so far.',
+        action: data => {
+            const refundAmount = data.moneySpent * 0.5;
+            data.money += refundAmount;
+            // Intentionally not counting this as money "earned"
         },
     },
 ];
@@ -109,6 +127,18 @@ const setupAugment = (element, augment, onSelect) => {
     });
 };
 
+function selectRandomN(items, count) {
+    return items.reduce((chosen, current, index) => {
+        const stillNeeded = count - chosen.length;
+        const remainingOptions = items.length - index;
+        if (Math.random() < stillNeeded / remainingOptions) {
+            return chosen.concat(current);
+        } else {
+            return chosen;
+        }
+    }, []);
+}
+
 function main({ augmentsAfter, producers }) {
     replaceNode(getById('main'));
 
@@ -128,6 +158,7 @@ function main({ augmentsAfter, producers }) {
     const data = {
         money: 100,
         earning: 0,
+        moneySpent: 0,
         profitMulti: 1,
         producers: {},
         selectedAugments: [],
@@ -137,15 +168,7 @@ function main({ augmentsAfter, producers }) {
     const setupAugmentChoices = () => {
         const availableAugments = AUGMENTS.filter(augment => !data.selectedAugments.includes(augment.id));
 
-        const options = availableAugments.reduce((running, current, index) => {
-            const stillNeeded = N_CHOICES - running.length;
-            const remainingOptions = availableAugments.length - index;
-            if (Math.random() < stillNeeded / remainingOptions) {
-                return running.concat(current);
-            } else {
-                return running;
-            }
-        }, []);
+        const options = selectRandomN(availableAugments, N_CHOICES);
 
         const onSelect = augment => {
             augment.action(data);
@@ -310,6 +333,7 @@ function main({ augmentsAfter, producers }) {
                     hasStarted = true;
 
                     data.money -= entry.price;
+                    data.moneySpent += entry.price;
                     entry.price *= entry.priceGrowthRate;
                     entry.count += 1;
                     calculateEarnings();

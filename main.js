@@ -10,6 +10,7 @@ const TIME_RATES = [
     { key: 'z', multi: 2 },
     { key: 'x', multi: 3 },
     { key: 'c', multi: 5 },
+    { key: 'v', multi: 10 },
 ];
 
 const AUGMENTS = [
@@ -266,7 +267,7 @@ function main({ augmentsAfter, producers }) {
         const secondsLeft = timeLeft % 60;
         setById('frames-left', `${minutesLeft}:${secondsLeft.toString().padStart(2, '0')}`);
         setById('is-paused', paused);
-        getById('blanket').dataset.displayed = pausedForAugmentChoices;
+        getById('blanket').dataset.hidden = !pausedForAugmentChoices;
     };
 
     const update = () => {
@@ -295,6 +296,7 @@ function main({ augmentsAfter, producers }) {
                 pausedForAugmentChoices = true;
                 setupAugmentChoices();
                 augmentTimes.splice(augmentTimes.findIndex(t => t === framesPassed), 1);
+                break;
             }
 
             unusedTime -= FRAME_TIME;
@@ -314,39 +316,41 @@ function main({ augmentsAfter, producers }) {
         clearChildren(producerList);
 
         producers.forEach(({ id, name, ...others }) => {
-            const row = document.createElement('div');
-            row.appendChild(document.createTextNode(`${name}: `));
+            const buyButton = createElement('button', {
+                id: `${id}-buy`,
+                children: [
+                    createTextNode('Buy'),
+                    createElement('div', {
+                        children: [
+                            createTextNode('Cost: $'),
+                            createElement('span', {
+                                id: `${id}-price`,
+                                text: round(others.price),
+                            }),
+                        ],
+                    }),
+                ],
+            });
 
-            const countNode = document.createElement('span');
-            countNode.id = `${id}-count`;
-            countNode.textContent = '0';
-            row.appendChild(countNode);
-
-            row.appendChild(document.createTextNode(', earning: $'));
-
-            const earningNode = document.createElement('span');
-            earningNode.id = `${id}-earning`;
-            earningNode.textContent = round(others.earning);
-            row.appendChild(earningNode);
-
-            row.appendChild(document.createTextNode('/s each.'));
-
-            const buyButton = document.createElement('button');
-            buyButton.id = `${id}-buy`;
-
-            buyButton.appendChild(document.createTextNode('Buy'));
-
-            const descRow = document.createElement('div');
-            descRow.appendChild(document.createTextNode('Cost: $'));
-
-            buyButton.appendChild(descRow);
-
-            const priceSpan = document.createElement('span');
-            priceSpan.id = `${id}-price`;
-            priceSpan.textContent = round(others.price);
-            descRow.appendChild(priceSpan);
-
-            row.appendChild(buyButton);
+            const row = createElement(
+                'div',
+                {
+                    children: [
+                        createTextNode(`${name}: `),
+                        createElement('span', {
+                            id: `${id}-count`,
+                            text: '0',
+                        }),
+                        createTextNode(', earning: $'),
+                        createElement('span', {
+                            id: `${id}-earning`,
+                            text: round(others.earning),
+                        }),
+                        createTextNode('/s each.'),
+                        buyButton,
+                    ],
+                },
+            );
 
             producerList.appendChild(row);
 
@@ -414,6 +418,12 @@ function main({ augmentsAfter, producers }) {
 }
 
 window.addEventListener('load', () => {
-    const augmentsAfter = [120, 240, 360, 480];
-    main({ augmentsAfter, producers: PRODUCERS });
+    const onComplete = () => {
+
+    };
+
+    main({
+        augmentsAfter: [120, 240, 360, 480],
+        producers: PRODUCERS,
+    });
 });

@@ -16,29 +16,16 @@
             <h1>Money: $<span id="money">100</span></h1>
             <div>Lifetime earnings: $<span id="lifetime-earnings">0</span></div>
             <h2>Earning: $<span id="earning">0</span>/s</h2>
-            <stack id="producer-list">
-                <div>
-                    Workers: <span id="workers-count">0</span>, earning $<span id="workers-earning">1</span>/s each.
-                    <button id="workers-buy">
-                        Buy
-                        Cost: $<span id="workers-price">20</span>
-                    </button>
-                </div>
-                <div>
-                    Factories: <span id="factory-count">0</span>, earning $<span id="factory-earning">20</span>/s each.
-                    <button id="factory-buy">
-                        Buy
-                        Cost: $<span id="factory-price">1000</span>
-                    </button>
-                </div>
-            </stack>
+            <stack id="producer-list"></stack>
             <stack id="augments">
                 <h2>Augments</h2>
-                <stack id="augment-list">
-                </stack>
+                <stack id="augment-list"></stack>
             </stack>
         </div>
-        <div id="blanket" data-displayed=false>
+        <div id="post-game" data-hidden=true>
+
+        </div>
+        <div id="blanket" data-hidden=true>
             <div id="blanket-placer">
                 <div class="choice" id="choice-1">
                     <stack>

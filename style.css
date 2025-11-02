@@ -14,8 +14,8 @@ h1, h2, h3, h4, h5, h6 {
     row-gap: 16px;
 }
 
-#augments[data-hidden=true] {
-    display: none;
+*[data-hidden=true] {
+    display: none !important;
 }
 
 inline {
@@ -67,10 +67,6 @@ key[data-pressed=true] {
     display: flex;
     justify-content: center;
     align-items: center;
-}
-
-#blanket[data-displayed=false] {
-    display: none;
 }
 
 #blanket-placer {

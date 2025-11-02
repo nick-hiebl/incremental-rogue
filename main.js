@@ -1,7 +1,7 @@
 const PRODUCERS = [
-    { id: 'workers', earning: 1, price: 20, priceGrowthRate: 1.1, name: 'Workers' },
+    { id: 'workers', earning: 1, price: 20, priceGrowthRate: 1.16, name: 'Workers' },
     { id: 'managers', earning: 4, price: 100, priceGrowthRate: 1.2, name: 'Managers' },
-    { id: 'factory', earning: 20, price: 1000, priceGrowthRate: 1.3, name: 'Factories' },
+    { id: 'factory', earning: 20, price: 1000, priceGrowthRate: 1.25, name: 'Factories' },
 ];
 
 const PAUSE_KEY = 'p';

@@ -139,6 +139,26 @@ function selectRandomN(items, count) {
     }, []);
 }
 
+function createTextNode(text) {
+    return document.createTextNode(text);
+}
+
+function createElement(elementName, { children, text, id } = {}) {
+    const element = document.createElement(elementName);
+    if (id) {
+        element.id = id;
+    }
+    if (text) {
+        element.textContent = text;
+    } else if (children) {
+        for (const child of children) {
+            element.appendChild(child);
+        }
+    }
+
+    return element;
+}
+
 function main({ augmentsAfter, producers }) {
     replaceNode(getById('main'));
 
@@ -175,6 +195,18 @@ function main({ augmentsAfter, producers }) {
             pausedForAugmentChoices = false;
             data.selectedAugments.push(augment.id);
             calculateEarnings();
+            getById('augment-list').appendChild(
+                createElement(
+                    'div',
+                    {
+                        children: [
+                            createElement('strong', { text: augment.title }),
+                            createElement('span', { text: ' ' + augment.description }),
+                        ],
+                    },
+                ),
+            );
+            getById('augments').dataset.hidden = false;
         };
 
         setupAugment(getById('choice-1'), options.splice(Math.floor(Math.random() * 3), 1)[0], onSelect);
@@ -352,6 +384,10 @@ function main({ augmentsAfter, producers }) {
             el.id = `time-key-${key}`;
             timeKeyBox.appendChild(el);
         });
+
+        // Set up augment list
+        clearChildren(getById('augment-list'));
+        getById('augments').dataset.hidden = true;
     };
 
     pageSetup();

@@ -101,6 +101,10 @@ function round(value) {
     return parseFloat((Math.round(value * 10) / 10).toFixed(1), 10).toLocaleString();
 }
 
+function intRound(value) {
+    return Math.floor(value).toLocaleString();
+}
+
 const N_CHOICES = 3;
 
 const replaceNode = original => {
@@ -160,7 +164,7 @@ function createElement(elementName, { children, text, id } = {}) {
     return element;
 }
 
-function main({ augmentsAfter, producers }) {
+function main({ augmentsAfter, producers, onComplete }) {
     replaceNode(getById('main'));
 
     let lastFrameTime = performance.now();
@@ -234,8 +238,8 @@ function main({ augmentsAfter, producers }) {
     };
 
     const visuallyUpdate = () => {
-        setById('money', Math.floor(data.money).toLocaleString());
-        setById('lifetime-earnings', Math.floor(data.lifetimeEarnings).toLocaleString());
+        setById('money', intRound(data.money));
+        setById('lifetime-earnings', intRound(data.lifetimeEarnings));
         setById('earning', round(data.earning));
 
         producers.forEach(({ id }) => {
@@ -268,6 +272,7 @@ function main({ augmentsAfter, producers }) {
         setById('frames-left', `${minutesLeft}:${secondsLeft.toString().padStart(2, '0')}`);
         setById('is-paused', paused);
         getById('blanket').dataset.hidden = !pausedForAugmentChoices;
+        getById('game-over').dataset.hidden = framesLeft > 0;
     };
 
     const update = () => {
@@ -289,7 +294,7 @@ function main({ augmentsAfter, producers }) {
 
         lastFrameTime = currentTime;
 
-        while (unusedTime >= FRAME_TIME) {
+        while (unusedTime >= FRAME_TIME && framesLeft > 0) {
             const framesPassed = framesTotal - framesLeft;
 
             if (augmentTimes.includes(framesPassed)) {
@@ -311,6 +316,9 @@ function main({ augmentsAfter, producers }) {
     };
 
     const pageSetup = () => {
+        // Set up main
+        getById('main').dataset.hidden = false;
+
         // Set up producers
         const producerList = getById('producer-list');
         clearChildren(producerList);
@@ -392,6 +400,12 @@ function main({ augmentsAfter, producers }) {
         // Set up augment list
         clearChildren(getById('augment-list'));
         getById('augments').dataset.hidden = true;
+
+        // Set up game over section
+        getById('game-over').dataset.hidden = true;
+        replaceNode(getById('game-over-button')).addEventListener('click', () => {
+            onComplete(data);
+        });
     };
 
     pageSetup();
@@ -417,13 +431,38 @@ function main({ augmentsAfter, producers }) {
     requestAnimationFrame(loop);
 }
 
-window.addEventListener('load', () => {
-    const onComplete = () => {
+const updatePostGame = crossRoundData => {
+    setById('lifetime-best', intRound(crossRoundData.lifetimeBest));
+};
 
+window.addEventListener('load', () => {
+    const crossRoundData = {
+        lifetimeBest: 0,
+        history: [],
     };
 
-    main({
-        augmentsAfter: [120, 240, 360, 480],
-        producers: PRODUCERS,
+    const onComplete = (data) => {
+        getById('main').dataset.hidden = true;
+        getById('post-game').dataset.hidden = false;
+
+        crossRoundData.lifetimeBest = Math.max(data.lifetimeEarnings);
+        crossRoundData.history.push(data.lifetimeEarnings);
+
+        updatePostGame(crossRoundData);
+    };
+
+    const startGame = () => {
+        main({
+            augmentsAfter: [120, 240, 360, 480],
+            producers: PRODUCERS,
+            onComplete,
+        });
+    };
+
+    getById('new-game').addEventListener('click', () => {
+        getById('post-game').dataset.hidden = true;
+        startGame();
     });
+
+    startGame();
 });

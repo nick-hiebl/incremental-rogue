@@ -21,10 +21,23 @@
                 <h2>Augments</h2>
                 <stack id="augment-list"></stack>
             </stack>
+            <stack id="game-over">
+                <h2>Time's up</h2>
+                <div>
+                    <button id="game-over-button">
+                        Game over
+                        <div>Move on</div>
+                    </button>
+                </div>
+            </stack>
         </div>
-        <div id="post-game" data-hidden=true>
-
-        </div>
+        <stack id="post-game" data-hidden=true>
+            <h1>Incremental Rogue Inc.</h1>
+            <div>All time best earnings: $<span id="lifetime-best">0</span>.</div>
+            <div>
+                <button id="new-game">New game</button>
+            </div>
+        </stack>
         <div id="blanket" data-hidden=true>
             <div id="blanket-placer">
                 <div class="choice" id="choice-1">

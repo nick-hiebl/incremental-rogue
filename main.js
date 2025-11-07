@@ -44,6 +44,14 @@ const TIME_RATES = [
 
 const AUGMENTS = [
 	{
+		id: 'hot-gossip',
+		title: 'Hot gossip',
+		description: 'Word of mouth generation from all sources increased by 30%',
+		action: data => {
+			data.resources['word-of-mouth'].multi += 0.3;
+		},
+	},
+	{
 		id: 'bigger-family',
 		title: 'Big family',
 		description: 'Immediate +10 family members',
@@ -231,6 +239,7 @@ function main({ augmentsAfter, resources, onComplete, globalMulti }) {
 				spent: 0,
 				multi: resource.multi ?? 1,
 				lifetimeEarnings: 0,
+				enabled: false,
 			};
 
 			return map;
@@ -296,6 +305,7 @@ function main({ augmentsAfter, resources, onComplete, globalMulti }) {
 		Object.values(data.resources).forEach(resource => {
 			if (resource.quantity > 0) {
 				getById(`${resource.id}-resource`).dataset.hidden = false;
+				resource.enabled = true;
 			}
 			setById(`${resource.id}-quantity`, intRound(resource.quantity));
 			setById(`${resource.id}-earning`, intRound(resource.earning));
@@ -308,6 +318,7 @@ function main({ augmentsAfter, resources, onComplete, globalMulti }) {
 
 			if (costResource.quantity >= entry.price) {
 				getById(`${id}-producer-row`).dataset.hidden = false;
+				entry.enabled = true;
 			}
 
 			const resource = data.resources[entry.outputUnit];
@@ -484,6 +495,7 @@ function main({ augmentsAfter, resources, onComplete, globalMulti }) {
 					count: 0,
 					outputUnit: outputUnit ?? resourceId,
 					costUnit: resourceId,
+					enabled: false,
 				};
 
 				buyButton.addEventListener('click', () => {

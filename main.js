@@ -318,7 +318,9 @@ function main({ augmentsAfter, producers, onComplete, globalMulti }) {
 
         visuallyUpdate();
 
-        requestAnimationFrame(loop);
+        if (framesLeft > 0) {
+            requestAnimationFrame(loop);
+        }
     };
 
     const pageSetup = () => {

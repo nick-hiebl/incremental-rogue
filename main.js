@@ -1,6 +1,6 @@
 const PRODUCERS = [
     { id: 'workers', earning: 1, price: 20, priceGrowthRate: 1.16, name: 'Workers' },
-    { id: 'managers', earning: 4, price: 100, priceGrowthRate: 1.2, name: 'Managers' },
+    { id: 'experts', earning: 4, price: 100, priceGrowthRate: 1.2, name: 'Experts' },
     { id: 'factory', earning: 20, price: 1000, priceGrowthRate: 1.25, name: 'Factories' },
 ];
 
@@ -144,6 +144,10 @@ function selectRandomN(items, count) {
     }, []);
 }
 
+function last(list) {
+    return list[list.length - 1];
+}
+
 function createTextNode(text) {
     return document.createTextNode(text);
 }
@@ -164,12 +168,14 @@ function createElement(elementName, { children, text, id } = {}) {
     return element;
 }
 
-function main({ augmentsAfter, producers, onComplete }) {
+const GAME_DURATION = 10 * 60 * FRAMES_PER_SECOND;
+
+function main({ augmentsAfter, producers, onComplete, globalMulti }) {
     replaceNode(getById('main'));
 
     let lastFrameTime = performance.now();
     let unusedTime = 0;
-    const framesTotal = 10 * 60 * FRAMES_PER_SECOND;
+    const framesTotal = GAME_DURATION;
     let framesLeft = framesTotal;
     let hasStarted = false;
     let paused = false;
@@ -231,7 +237,7 @@ function main({ augmentsAfter, producers, onComplete }) {
 
     const calculateEarnings = () => {
         const earning = Object.values(data.producers).reduce((total, current) => {
-            return total + current.earning * current.count * current.profitMulti;
+            return total + current.earning * current.count * current.profitMulti * globalMulti;
         }, 0);
 
         data.earning = earning * data.profitMulti;
@@ -246,7 +252,7 @@ function main({ augmentsAfter, producers, onComplete }) {
             const entry = data.producers[id];
 
             setById(`${id}-count`, entry.count);
-            setById(`${id}-earning`, round(entry.earning * entry.profitMulti));
+            setById(`${id}-earning`, round(entry.earning * entry.profitMulti * data.profitMulti * globalMulti));
             setById(`${id}-price`, round(entry.price));
 
             getById(`${id}-buy`).disabled = data.money < entry.price;
@@ -371,6 +377,10 @@ function main({ augmentsAfter, producers, onComplete }) {
             };
 
             buyButton.addEventListener('click', () => {
+                if (framesLeft <= 0) {
+                    return;
+                }
+
                 const entry = data.producers[id];
 
                 if (data.money >= entry.price) {
@@ -403,64 +413,172 @@ function main({ augmentsAfter, producers, onComplete }) {
 
         // Set up game over section
         getById('game-over').dataset.hidden = true;
+
+        const onKeyDown = event => {
+            if (event.repeat) {
+                return;
+            }
+
+            if (TIME_KEYS.has(event.key)) {
+                timeKeys.add(event.key);
+            } else if (event.key === PAUSE_KEY) {
+                paused = !paused;
+                unusedTime = 0;
+            }
+        };
+        const onKeyUp = event => {
+            if (TIME_KEYS.has(event.key)) {
+                timeKeys.delete(event.key);
+            }
+        };
+        document.body.addEventListener('keydown', onKeyDown);
+        document.body.addEventListener('keyup', onKeyUp);
+
         replaceNode(getById('game-over-button')).addEventListener('click', () => {
+            document.body.removeEventListener('keydown', onKeyDown);
+            document.body.removeEventListener('keyup', onKeyUp);
             onComplete(data);
         });
     };
 
     pageSetup();
 
-    document.body.addEventListener('keydown', event => {
-        if (event.repeat) {
-            return;
-        }
-
-        if (TIME_KEYS.has(event.key)) {
-            timeKeys.add(event.key);
-        } else if (event.key === PAUSE_KEY) {
-            paused = !paused;
-            unusedTime = 0;
-        }
-    });
-    document.body.addEventListener('keyup', event => {
-        if (TIME_KEYS.has(event.key)) {
-            timeKeys.delete(event.key);
-        }
-    });
-
     requestAnimationFrame(loop);
 }
 
 const updatePostGame = crossRoundData => {
+    setById('last-round-earnings', intRound(last(crossRoundData.history)));
     setById('lifetime-best', intRound(crossRoundData.lifetimeBest));
+    setById('points', intRound(crossRoundData.points));
+
+    if (last(crossRoundData.history) === crossRoundData.lifetimeBest) {
+        getById('new-record').dataset.hidden = false;
+        setById('new-points-record', intRound(crossRoundData.lastRoundPoints));
+        getById('no-record').dataset.hidden = true;
+    } else {
+        getById('no-record').dataset.hidden = false;
+        setById('new-points-normal', intRound(crossRoundData.lastRoundPoints));
+        getById('new-record').dataset.hidden = true;
+    }
+
+    META_UPGRADES.forEach(upgrade => {
+        const button = getById(`${upgrade.id}-button`);
+        button.disabled = upgrade.cost > crossRoundData.points;
+    });
 };
+
+const STATIC_POINTS_MULTI = 1;
+const AWARD_POINTS_MULTI = 5;
+
+const META_UPGRADES = [
+    {
+        id: 'global-multi',
+        text: 'Buy 10% more global earnings',
+        cost: 10,
+        repeatable: true,
+        action: (crossRoundData, thisUpgrade) => {
+            crossRoundData.globalMulti += 0.1;
+            thisUpgrade.cost = Math.floor(thisUpgrade.cost * 1.1);
+        },
+        currentValueText: (crossRoundData, _thisUpgrade) => {
+            return `(Current value: ${intRound(crossRoundData.globalMulti * 100)}%)`
+        },
+        purchasedTimes: 0,
+    },
+]
 
 window.addEventListener('load', () => {
     const crossRoundData = {
-        lifetimeBest: 0,
+        lifetimeBest: 1,
         history: [],
+        pointsEarned: 0,
+        points: 0,
+        lastRoundPoints: 0,
+        globalMulti: 1,
     };
+
+    let isCurrentSceneActive = false;
 
     const onComplete = (data) => {
         getById('main').dataset.hidden = true;
         getById('post-game').dataset.hidden = false;
 
-        crossRoundData.lifetimeBest = Math.max(data.lifetimeEarnings);
+        let newPoints = data.lifetimeEarnings > 1 ? Math.log(data.lifetimeEarnings) * STATIC_POINTS_MULTI : 0;
+
+        if (data.lifetimeEarnings > crossRoundData.lifetimeBest) {
+            newPoints += AWARD_POINTS_MULTI * (Math.pow(data.lifetimeEarnings, 1 / 3) - Math.pow(crossRoundData.lifetimeBest, 1 / 3));
+
+            crossRoundData.lifetimeBest = Math.max(data.lifetimeEarnings);
+        }
+
+        crossRoundData.pointsEarned += newPoints;
+        crossRoundData.points += newPoints;
+        crossRoundData.lastRoundPoints = newPoints;
+
         crossRoundData.history.push(data.lifetimeEarnings);
 
         updatePostGame(crossRoundData);
+        isCurrentSceneActive = true;
     };
+
+    const metaUpgradesList = getById('meta-upgrades');
+
+    META_UPGRADES.forEach(metaUpgrade => {
+        const priceTag = createElement('span', { text: intRound(metaUpgrade.cost), id: `${metaUpgrade.id}-price` });
+        const currentText = createElement('div', { text: metaUpgrade.currentValueText(crossRoundData, metaUpgrade) });
+        const button = createElement('button', {
+            id: `${metaUpgrade.id}-button`,
+            children: [
+                createTextNode(metaUpgrade.text),
+                createElement('div', {
+                    children: [
+                        createTextNode('Cost: '),
+                        priceTag,
+                        createTextNode(' points'),
+                    ],
+                }),
+                currentText,
+            ],
+        });
+
+        button.addEventListener('click', () => {
+            if (!isCurrentSceneActive) {
+                return;
+            } else if (crossRoundData.points < metaUpgrade.cost) {
+                return;
+            }
+
+            metaUpgrade.action(crossRoundData, metaUpgrade);
+            metaUpgrade.purchasedTimes += 1;
+
+            crossRoundData.points -= metaUpgrade.cost;
+
+            currentText.textContent = metaUpgrade.currentValueText(crossRoundData, metaUpgrade);
+
+            if (!metaUpgrade.repeatable) {
+                button.disabled = true;
+            } else {
+                priceTag.textContent = intRound(metaUpgrade.cost);
+            }
+
+            updatePostGame(crossRoundData);
+        });
+
+        metaUpgradesList.appendChild(button);
+    });
 
     const startGame = () => {
         main({
             augmentsAfter: [120, 240, 360, 480],
             producers: PRODUCERS,
             onComplete,
+            globalMulti: crossRoundData.globalMulti,
         });
     };
 
     getById('new-game').addEventListener('click', () => {
         getById('post-game').dataset.hidden = true;
+        isCurrentSceneActive = false;
         startGame();
     });
 

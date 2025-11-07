@@ -1,7 +1,36 @@
-const PRODUCERS = [
-    { id: 'workers', earning: 1, price: 20, priceGrowthRate: 1.16, name: 'Workers' },
-    { id: 'experts', earning: 4, price: 100, priceGrowthRate: 1.2, name: 'Experts' },
-    { id: 'factory', earning: 20, price: 1000, priceGrowthRate: 1.25, name: 'Factories' },
+const RESOURCES = [
+    {
+        id: 'word-of-mouth',
+        name: 'Word of mouth',
+        initialQuantity: 10,
+        multi: 1,
+        producers: [
+            { id: 'family-member', earning: 1, price: 10, priceGrowthRate: 1.3, name: 'Family members' },
+            { id: 'coworker', earning: 3, price: 50, priceGrowthRate: 1.2, name: 'Coworkers' },
+            { id: 'friend', earning: 10, price: 200, priceGrowthRate: 1.2, name: 'Friends' },
+            { id: 'follower', earning: 1, price: 1200, priceGrowthRate: 1.25, name: 'Followers', outputUnit: 'faith' },
+        ],
+    },
+    {
+        id: 'faith',
+        name: 'Faith',
+        multi: 1,
+        producers: [
+            { id: 'acolyte', earning: 5, price: 20, priceGrowthRate: 1.28, name: 'Acolytes' },
+            { id: 'priest', earning: 25, price: 300, priceGrowthRate: 1.29, name: 'Priests' },
+            { id: 'monk', earning: 1, price: 900, priceGrowthRate: 1.2, name: 'Monks', outputUnit: 'gospels' },
+        ],
+    },
+    {
+        id: 'gospels',
+        name: 'Gospels',
+        multi: 1,
+        producers: [
+            { id: 'scribe', earning: 2, price: 12, priceGrowthRate: 1.2, name: 'Scribes' },
+            { id: 'theologian', earning: 5, price: 75, priceGrowthRate: 1.25, name: 'Theologians' },
+            { id: 'bible-assembler', earning: 12, price: 200, priceGrowthRate: 1.24, name: 'Bible assemblers' },
+        ],
+    },
 ];
 
 const PAUSE_KEY = 'p';
@@ -15,70 +44,75 @@ const TIME_RATES = [
 
 const AUGMENTS = [
     {
-        id: 'better-workers',
-        title: 'Better workers',
-        description: 'Workers produce 100% more money per second.',
+        id: 'bigger-family',
+        title: 'Big family',
+        description: 'Immediate +10 family members',
         action: data => {
-            data.producers['workers'].profitMulti += 1;
+            data.producers['family-member'].count += 10;
         },
     },
     {
-        id: 'better-workers-2',
-        title: 'Productive workers',
-        description: 'Workers produce 80% more money per second.',
+        id: 'outspoken-coworkers',
+        title: 'Outspoken coworkers',
+        description: 'Coworkers produce twice as much word of mouth!',
         action: data => {
-            data.producers['workers'].profitMulti += 0.8;
+            data.producers['coworker'].profitMulti *= 2;
         },
     },
     {
-        id: 'better-factories',
-        title: 'Better factories',
-        description: 'Factories produce 150% more money per second.',
+        id: 'noisy-friends',
+        title: 'Noisy friends',
+        description: 'Friends produce 50% more word of mouth.',
         action: data => {
-            data.producers['factory'].profitMulti += 1.5;
+            data.producers['friend'].profitMulti += 0.5;
         },
     },
     {
-        id: 'profit-bonus',
-        title: 'More profit',
-        description: 'Earn 20% more profit from all sources.',
+        id: 'gullible-followers',
+        title: 'Gullible followers',
+        description: 'Followers only require half as much word of mouth to recruit',
         action: data => {
-            data.profitMulti += 0.2;
+            data.producers['follower'].price *= 0.5;
         },
     },
     {
-        id: 'factory-price-reset',
-        title: 'Factory price reset',
-        description: 'Undo all of that inflation! Factory price resets to $1000.',
+        id: 'busy-followers',
+        title: 'Busy followers',
+        description: 'Followers produce 50% more faith',
         action: data => {
-            data.producers['factory'].price = 1000;
+            data.producers['follower'].profitMulti += 0.5;
         },
     },
     {
-        id: 'factory-discount',
-        title: 'Discount on factories',
-        description: 'Halves the price of all factories.',
+        id: 'prayer-i',
+        title: 'Prayer I',
+        description: 'Followers produce 60% more faith',
         action: data => {
-            data.producers['factory'].price *= 0.5;
-        }
-    },
-    {
-        id: 'worker-cost-scaling',
-        title: 'Worker cost scaling',
-        description: 'The price of each successive worker only increases at 20% the normal speed.',
-        action: data => {
-            const growthRate = data.producers['workers'].priceGrowthRate;
-            data.producers['workers'].priceGrowthRate = 0.8 * 1 + 0.2 * growthRate;
+            data.producers['follower'].profitMulti += 0.6;
         },
     },
     {
-        id: 'cashback',
-        title: 'Cashback program',
-        description: 'Get 50% cashback on all money you\'ve spent so far.',
+        id: 'prayer-ii',
+        title: 'Prayer II',
+        description: 'Followers produce 70% more faith',
         action: data => {
-            const refundAmount = data.moneySpent * 0.5;
-            data.money += refundAmount;
-            // Intentionally not counting this as money "earned"
+            data.producers['follower'].profitMulti += 0.7;
+        },
+    },
+    {
+        id: 'prayer-iii',
+        title: 'Prayer III',
+        description: 'Followers produce 80% more faith',
+        action: data => {
+            data.producers['follower'].profitMulti += 0.8;
+        },
+    },
+    {
+        id: 'acolyte-power',
+        title: 'Acolyte Power',
+        description: 'Acolytes produce twice as much faith',
+        action: data => {
+            data.producers['acolyte'].profitMulti *= 2;
         },
     },
 ];
@@ -170,7 +204,7 @@ function createElement(elementName, { children, text, id } = {}) {
 
 const GAME_DURATION = 10 * 60 * FRAMES_PER_SECOND;
 
-function main({ augmentsAfter, producers, onComplete, globalMulti }) {
+function main({ augmentsAfter, resources, onComplete, globalMulti }) {
     replaceNode(getById('main'));
 
     let lastFrameTime = performance.now();
@@ -187,13 +221,22 @@ function main({ augmentsAfter, producers, onComplete, globalMulti }) {
     const timeKeys = new Set();
 
     const data = {
-        money: 100,
-        earning: 0,
-        moneySpent: 0,
-        profitMulti: 1,
         producers: {},
+        resources: resources.reduce((map, resource) => {
+            map[resource.id] = {
+                name: resource.name,
+                id: resource.id,
+                quantity: resource.initialQuantity ?? 0,
+                earning: 0,
+                spent: 0,
+                multi: resource.multi ?? 1,
+                lifetimeEarnings: 0,
+            };
+
+            return map;
+        }, {}),
+        profitMulti: 1,
         selectedAugments: [],
-        lifetimeEarnings: 0,
     };
 
     const setupAugmentChoices = () => {
@@ -236,23 +279,41 @@ function main({ augmentsAfter, producers, onComplete, globalMulti }) {
     };
 
     const calculateEarnings = () => {
-        const earning = Object.values(data.producers).reduce((total, current) => {
-            return total + current.earning * current.count * current.profitMulti * globalMulti;
-        }, 0);
+        Object.values(data.resources).forEach(resource => {
+            const earning = Object.values(data.producers).reduce((total, current) => {
+                if (current.outputUnit !== resource.id) {
+                    return total;
+                }
 
-        data.earning = earning * data.profitMulti;
+                return total + current.earning * current.count * current.profitMulti * resource.multi;
+            }, 0);
+
+            resource.earning = earning * data.profitMulti * globalMulti;
+        });
     };
 
     const visuallyUpdate = () => {
-        setById('money', intRound(data.money));
-        setById('lifetime-earnings', intRound(data.lifetimeEarnings));
-        setById('earning', round(data.earning));
+        Object.values(data.resources).forEach(resource => {
+            if (resource.quantity > 0) {
+                getById(`${resource.id}-resource`).dataset.hidden = false;
+            }
+            setById(`${resource.id}-quantity`, intRound(resource.quantity));
+            setById(`${resource.id}-earning`, intRound(resource.earning));
+            setById(`${resource.id}-lifetime`, intRound(resource.lifetimeEarnings));
+        });
 
-        producers.forEach(({ id }) => {
-            const entry = data.producers[id];
+        Object.values(data.producers).forEach(entry => {
+            const { id } = entry;
+            const costResource = data.resources[entry.costUnit];
+
+            if (costResource.quantity >= entry.price) {
+                getById(`${id}-producer-row`).dataset.hidden = false;
+            }
+
+            const resource = data.resources[entry.outputUnit];
 
             setById(`${id}-count`, entry.count);
-            setById(`${id}-earning`, round(entry.earning * entry.profitMulti * data.profitMulti * globalMulti));
+            setById(`${id}-earning`, round(entry.earning * entry.profitMulti * resource.multi * data.profitMulti * globalMulti));
             setById(`${id}-price`, round(entry.price));
 
             getById(`${id}-buy`).disabled = data.money < entry.price;
@@ -282,8 +343,10 @@ function main({ augmentsAfter, producers, onComplete, globalMulti }) {
     };
 
     const update = () => {
-        data.money += data.earning / FRAMES_PER_SECOND;
-        data.lifetimeEarnings += data.earning / FRAMES_PER_SECOND;
+        Object.values(data.resources).forEach(resource => {
+            resource.quantity += resource.earning / FRAMES_PER_SECOND;
+            resource.lifetimeEarnings += resource.earning / FRAMES_PER_SECOND;
+        });
     };
 
     const loop = () => {
@@ -327,74 +390,124 @@ function main({ augmentsAfter, producers, onComplete, globalMulti }) {
         // Set up main
         getById('main').dataset.hidden = false;
 
-        // Set up producers
-        const producerList = getById('producer-list');
-        clearChildren(producerList);
+        // Set up resources
+        const resourceList = getById('resource-list');
+        clearChildren(resourceList);
 
-        producers.forEach(({ id, name, ...others }) => {
-            const buyButton = createElement('button', {
-                id: `${id}-buy`,
+        resources.forEach(({ id: resourceId, name: resourceName, producers, initialQuantity }) => {
+            const producerBlock = createElement('div');
+            const resourceBlock = createElement('div', {
+                id: `${resourceId}-resource`,
                 children: [
-                    createTextNode('Buy'),
-                    createElement('div', {
+                    createElement('h2', {
                         children: [
-                            createTextNode('Cost: $'),
+                            createTextNode(resourceName + ': '),
                             createElement('span', {
-                                id: `${id}-price`,
-                                text: round(others.price),
+                                id: `${resourceId}-quantity`,
+                                text: intRound(initialQuantity ?? 0),
                             }),
                         ],
                     }),
+                    createElement('h3', {
+                        children: [
+                            createTextNode('Earning: '),
+                            createElement('span', {
+                                id: `${resourceId}-earning`,
+                                text: '0',
+                            }),
+                            createTextNode('/s'),
+                        ],
+                    }),
+                    createElement('div', {
+                        children: [
+                            createTextNode('Lifetime earnings: '),
+                            createElement('span', {
+                                id: `${resourceId}-lifetime`,
+                                text: '0',
+                            }),
+                        ],
+                    }),
+                    producerBlock,
                 ],
             });
+            resourceBlock.dataset.hidden = true;
 
-            const row = createElement(
-                'div',
-                {
+            producers.forEach(({ id, name, outputUnit, ...others }) => {
+                const buyButton = createElement('button', {
+                    id: `${id}-buy`,
                     children: [
-                        createTextNode(`${name}: `),
-                        createElement('span', {
-                            id: `${id}-count`,
-                            text: '0',
+                        createTextNode('Buy'),
+                        createElement('div', {
+                            children: [
+                                createTextNode('Cost: '),
+                                createElement('span', {
+                                    id: `${id}-price`,
+                                    text: round(others.price),
+                                }),
+                                createTextNode(' ' + resourceName),
+                            ],
                         }),
-                        createTextNode(', earning: $'),
-                        createElement('span', {
-                            id: `${id}-earning`,
-                            text: round(others.earning),
-                        }),
-                        createTextNode('/s each.'),
-                        buyButton,
                     ],
-                },
-            );
+                });
 
-            producerList.appendChild(row);
+                const outputResource = data.resources[outputUnit ?? resourceId];
 
-            data.producers[id] = {
-                id,
-                name,
-                ...others,
-                profitMulti: 1,
-                count: 0,
-            };
+                const row = createElement(
+                    'div',
+                    {
+                        id: `${id}-producer-row`,
+                        children: [
+                            createTextNode(`${name}: `),
+                            createElement('span', {
+                                id: `${id}-count`,
+                                text: '0',
+                            }),
+                            createTextNode(', earning: '),
+                            createElement('span', {
+                                id: `${id}-earning`,
+                                text: round(others.earning),
+                            }),
+                            createTextNode(` ${outputResource.name}/s each.`),
+                            buyButton,
+                        ],
+                    },
+                );
+                row.dataset.hidden = true;
 
-            buyButton.addEventListener('click', () => {
-                if (framesLeft <= 0) {
-                    return;
-                }
+                producerBlock.appendChild(row);
 
-                const entry = data.producers[id];
+                data.producers[id] = {
+                    id,
+                    name,
+                    ...others,
+                    profitMulti: 1,
+                    count: 0,
+                    outputUnit: outputUnit ?? resourceId,
+                    costUnit: resourceId,
+                };
 
-                if (data.money >= entry.price) {
-                    hasStarted = true;
+                buyButton.addEventListener('click', () => {
+                    if (framesLeft <= 0) {
+                        return;
+                    }
 
-                    data.money -= entry.price;
-                    data.moneySpent += entry.price;
-                    entry.price *= entry.priceGrowthRate;
-                    entry.count += 1;
-                    calculateEarnings();
-                }
+                    const entry = data.producers[id];
+
+                    const resource = data.resources[resourceId];
+
+                    if (resource.quantity >= entry.price) {
+                        hasStarted = true;
+
+                        resource.quantity -= entry.price;
+                        resource.spent += entry.price;
+                        entry.price *= entry.priceGrowthRate;
+                        entry.count += 1;
+                        calculateEarnings();
+                    }
+                });
             });
+
+            resourceList.appendChild(resourceBlock);
         });
 
         // Set up time box
@@ -444,6 +557,7 @@ function main({ augmentsAfter, producers, onComplete, globalMulti }) {
     };
 
     pageSetup();
+    visuallyUpdate();
 
     requestAnimationFrame(loop);
 }
@@ -572,7 +686,7 @@ window.addEventListener('load', () => {
     const startGame = () => {
         main({
             augmentsAfter: [120, 240, 360, 480],
-            producers: PRODUCERS,
+            resources: RESOURCES,
             onComplete,
             globalMulti: crossRoundData.globalMulti,
         });

@@ -1,38 +1,3 @@
-const RESOURCES = [
-	{
-		id: 'word-of-mouth',
-		name: 'Word of mouth',
-		initialQuantity: 10,
-		multi: 1,
-		producers: [
-			{ id: 'family-member', earning: 1, price: 10, priceGrowthRate: 1.3, name: 'Family members' },
-			{ id: 'coworker', earning: 3, price: 50, priceGrowthRate: 1.2, name: 'Coworkers', outputUnit: 'family-member' },
-			{ id: 'friend', earning: 10, price: 200, priceGrowthRate: 1.2, name: 'Friends' },
-			{ id: 'follower', earning: 1, price: 1200, priceGrowthRate: 1.25, name: 'Followers', outputUnit: 'faith' },
-		],
-	},
-	{
-		id: 'faith',
-		name: 'Faith',
-		multi: 1,
-		producers: [
-			{ id: 'acolyte', earning: 5, price: 20, priceGrowthRate: 1.28, name: 'Acolytes' },
-			{ id: 'priest', earning: 25, price: 300, priceGrowthRate: 1.29, name: 'Priests' },
-			{ id: 'monk', earning: 1, price: 900, priceGrowthRate: 1.2, name: 'Monks', outputUnit: 'gospels' },
-		],
-	},
-	{
-		id: 'gospels',
-		name: 'Gospels',
-		multi: 1,
-		producers: [
-			{ id: 'scribe', earning: 2, price: 12, priceGrowthRate: 1.2, name: 'Scribes' },
-			{ id: 'theologian', earning: 5, price: 75, priceGrowthRate: 1.25, name: 'Theologians' },
-			{ id: 'bible-assembler', earning: 12, price: 200, priceGrowthRate: 1.24, name: 'Bible assemblers' },
-		],
-	},
-];
-
 const PAUSE_KEY = 'p';
 
 const TIME_RATES = [
@@ -40,89 +5,6 @@ const TIME_RATES = [
 	{ key: 'x', multi: 3 },
 	{ key: 'c', multi: 5 },
 	{ key: 'v', multi: 10 },
-];
-
-const AUGMENTS = [
-	{
-		id: 'hot-gossip',
-		title: 'Hot gossip',
-		description: 'Word of mouth generation from all sources increased by 30%',
-		action: data => {
-			data.resources['word-of-mouth'].multi += 0.3;
-		},
-	},
-	{
-		id: 'bigger-family',
-		title: 'Big family',
-		description: 'Immediate +10 family members',
-		action: data => {
-			data.producers['family-member'].count += 10;
-		},
-	},
-	{
-		id: 'outspoken-coworkers',
-		title: 'Outspoken coworkers',
-		description: 'Coworkers produce twice as much word of mouth!',
-		action: data => {
-			data.producers['coworker'].profitMulti *= 2;
-		},
-	},
-	{
-		id: 'noisy-friends',
-		title: 'Noisy friends',
-		description: 'Friends produce 50% more word of mouth.',
-		action: data => {
-			data.producers['friend'].profitMulti += 0.5;
-		},
-	},
-	{
-		id: 'gullible-followers',
-		title: 'Gullible followers',
-		description: 'Followers only require half as much word of mouth to recruit',
-		action: data => {
-			data.producers['follower'].price *= 0.5;
-		},
-	},
-	{
-		id: 'busy-followers',
-		title: 'Busy followers',
-		description: 'Followers produce 50% more faith',
-		action: data => {
-			data.producers['follower'].profitMulti += 0.5;
-		},
-	},
-	{
-		id: 'prayer-i',
-		title: 'Prayer I',
-		description: 'Followers produce 60% more faith',
-		action: data => {
-			data.producers['follower'].profitMulti += 0.6;
-		},
-	},
-	{
-		id: 'prayer-ii',
-		title: 'Prayer II',
-		description: 'Followers produce 70% more faith',
-		action: data => {
-			data.producers['follower'].profitMulti += 0.7;
-		},
-	},
-	{
-		id: 'prayer-iii',
-		title: 'Prayer III',
-		description: 'Followers produce 80% more faith',
-		action: data => {
-			data.producers['follower'].profitMulti += 0.8;
-		},
-	},
-	{
-		id: 'acolyte-power',
-		title: 'Acolyte Power',
-		description: 'Acolytes produce twice as much faith',
-		action: data => {
-			data.producers['acolyte'].profitMulti *= 2;
-		},
-	},
 ];
 
 const FRAMES_PER_SECOND = 20;
@@ -249,7 +131,9 @@ function main({ augmentsAfter, resources, onComplete, globalMulti }) {
 	};
 
 	const setupAugmentChoices = () => {
-		const availableAugments = AUGMENTS.filter(augment => !data.selectedAugments.includes(augment.id));
+		const availableAugments = AUGMENTS
+			.filter(augment => !data.selectedAugments.includes(augment.id))
+			.filter(augment => !augment.condition || augment.condition(data));
 
 		const options = selectRandomN(availableAugments, N_CHOICES);
 

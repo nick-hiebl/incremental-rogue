@@ -6,7 +6,7 @@ const RESOURCES = [
 		multi: 1,
 		producers: [
 			{ id: 'family-member', earning: 1, price: 10, priceGrowthRate: 1.3, name: 'Family members' },
-			{ id: 'coworker', earning: 3, price: 50, priceGrowthRate: 1.2, name: 'Coworkers' },
+			{ id: 'coworker', earning: 3, price: 50, priceGrowthRate: 1.2, name: 'Coworkers', outputUnit: 'family-member' },
 			{ id: 'friend', earning: 10, price: 200, priceGrowthRate: 1.2, name: 'Friends' },
 			{ id: 'follower', earning: 1, price: 1200, priceGrowthRate: 1.25, name: 'Followers', outputUnit: 'faith' },
 		],
@@ -299,6 +299,18 @@ function main({ augmentsAfter, resources, onComplete, globalMulti }) {
 
 			resource.earning = earning * data.profitMulti * globalMulti;
 		});
+
+		Object.values(data.producers).forEach(targetProducer => {
+			const gainRate = Object.values(data.producers).reduce((total, current) => {
+				if (current.outputUnit !== targetProducer.id) {
+					return total;
+				}
+
+				return total + current.earning * current.count * current.profitMulti * targetProducer.gainMulti;
+			}, 0);
+
+			targetProducer.gainRate = gainRate * data.profitMulti * globalMulti;
+		});
 	};
 
 	const visuallyUpdate = () => {
@@ -321,11 +333,16 @@ function main({ augmentsAfter, resources, onComplete, globalMulti }) {
 				entry.enabled = true;
 			}
 
-			const resource = data.resources[entry.outputUnit];
-
-			setById(`${id}-count`, entry.count);
-			setById(`${id}-earning`, round(entry.earning * entry.profitMulti * resource.multi * data.profitMulti * globalMulti));
+			setById(`${id}-count`, intRound(entry.count));
 			setById(`${id}-price`, round(entry.price));
+
+			if (entry.outputUnit in data.resources) {
+				const resource = data.resources[entry.outputUnit];
+				setById(`${id}-earning`, round(entry.earning * entry.profitMulti * resource.multi * data.profitMulti * globalMulti));
+			} else {
+				const targetProducer = data.producers[entry.outputUnit];
+				setById(`${id}-earning`, round(entry.earning * entry.profitMulti * targetProducer.gainMulti * data.profitMulti * globalMulti));
+			}
 
 			getById(`${id}-buy`).disabled = data.money < entry.price;
 		});
@@ -358,6 +375,9 @@ function main({ augmentsAfter, resources, onComplete, globalMulti }) {
 			resource.quantity += resource.earning / FRAMES_PER_SECOND;
 			resource.lifetimeEarnings += resource.earning / FRAMES_PER_SECOND;
 		});
+		Object.values(data.producers).forEach(producer => {
+			producer.count += producer.gainRate / FRAMES_PER_SECOND;
+		});
 	};
 
 	const loop = () => {
@@ -387,6 +407,7 @@ function main({ augmentsAfter, resources, onComplete, globalMulti }) {
 			unusedTime -= FRAME_TIME;
 			framesLeft -= 1;
 
+			calculateEarnings();
 			update();
 		}
 
@@ -461,7 +482,11 @@ function main({ augmentsAfter, resources, onComplete, globalMulti }) {
 					],
 				});
 
-				const outputResource = data.resources[outputUnit ?? resourceId];
+				const output = outputUnit ?? resourceId;
+
+				const outputName = output in data.producers
+					? data.producers[output].name
+					: data.resources[output].name;
 
 				const row = createElement(
 					'div',
@@ -478,7 +503,7 @@ function main({ augmentsAfter, resources, onComplete, globalMulti }) {
 								id: `${id}-earning`,
 								text: round(others.earning),
 							}),
-							createTextNode(` ${outputResource.name}/s each.`),
+							createTextNode(` ${outputName}/s each.`),
 							buyButton,
 						],
 					},
@@ -492,8 +517,10 @@ function main({ augmentsAfter, resources, onComplete, globalMulti }) {
 					name,
 					...others,
 					profitMulti: 1,
+					gainMulti: 1,
+					gainRate: 0,
 					count: 0,
-					outputUnit: outputUnit ?? resourceId,
+					outputUnit: output,
 					costUnit: resourceId,
 					enabled: false,
 				};

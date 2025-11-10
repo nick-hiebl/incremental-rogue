@@ -2,6 +2,7 @@ body {
 	background-color: #112;
 	color: white;
 	font-family: Arial, Helvetica, sans-serif;
+	margin: 0;
 }
 
 h1, h2, h3, h4, h5, h6 {
@@ -12,6 +13,14 @@ h1, h2, h3, h4, h5, h6 {
 	display: flex;
 	flex-direction: column;
 	row-gap: 16px;
+	padding: 8px;
+}
+
+#quest-container {
+	width: 300px;
+	padding: 8px;
+	border-left: 1px solid white;
+	min-height: 100vh;
 }
 
 *[data-hidden=true] {
@@ -24,6 +33,14 @@ inline {
 	flex-direction: row;
 	gap: 8px;
 	align-items: center;
+}
+
+inline[data-align="top"] {
+	align-items: start;
+}
+
+inline[data-spread] {
+	justify-content: space-between;
 }
 
 stack {

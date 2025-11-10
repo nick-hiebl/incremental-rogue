@@ -4,44 +4,26 @@
 		<title>Incremental</title>
 	</head>
 	<body>
-		<div id="main">
-			<inline id="time-rate-box">
-				<span>
-					Time rate: <span id="time-rate">1</span>
-				</span>
-				<inline id="time-key-box">a b</inline>
-				<span>Time left: <span id="frames-left">12000</span></span>
-				<span>Paused: <span id="is-paused">false</span></span>
-			</inline>
-			<div>Lifetime earnings: $<span id="lifetime-earnings">0</span></div>
-			<stack id="resource-list"></stack>
-			<stack id="augments">
-				<h2>Augments</h2>
-				<stack id="augment-list"></stack>
-			</stack>
-			<stack id="game-over">
-				<h2>Time's up</h2>
-				<div>
-					<button id="game-over-button">
-						Game over
-						<div>Move on</div>
-					</button>
-				</div>
-			</stack>
-		</div>
-		<stack id="post-game" data-hidden=true>
-			<h1>Incremental Rogue Inc.</h1>
-			<div>You just earned: $<span id="last-round-earnings">0</span>.</div>
-			<div>All time best earnings: $<span id="lifetime-best">0</span>.</div>
-			<div id="new-record">You set a new record and earned <span id="new-points-record">0</span> point(s).</div>
-			<div id="no-record">You earned <span id="new-points-normal">0</span> point(s).</div>
-			<div>Points: <span id="points">0</span></div>
-			<inline id="meta-upgrades">
-			</inline>
-			<div>
-				<button id="new-game">New game</button>
+		<inline data-align="top" data-spread>
+			<div id="main">
+				<inline id="time-rate-box">
+					<span>
+						Time rate: <span id="time-rate">1</span>
+					</span>
+					<inline id="time-key-box"></inline>
+					<span>Paused: <span id="is-paused">false</span></span>
+				</inline>
+				<stack id="resource-list"></stack>
+				<stack id="augments">
+					<h2>Augments</h2>
+					<stack id="augment-list"></stack>
+				</stack>
 			</div>
-		</stack>
+			<div id="quest-container">
+				<h2>Quests</h2>
+				<div id="quest-list"></div>
+			</div>
+		</inline>
 		<div id="blanket" data-hidden=true>
 			<div id="blanket-placer">
 				<div class="choice" id="choice-1">

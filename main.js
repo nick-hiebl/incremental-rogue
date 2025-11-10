@@ -92,15 +92,24 @@ function createElement(elementName, { children, text, id } = {}) {
 	return element;
 }
 
-const GAME_DURATION = 10 * 60 * FRAMES_PER_SECOND;
+const createQuestUI = (quest, data, onQuestSelect) => {
+	const button = createElement('button', {
+		children: [
+			createElement('h3', { text: quest.title }),
+			createElement('div', { text: quest.description }),
+		],
+	});
+	button.addEventListener('click', () => onQuestSelect());
 
-function main({ augmentsAfter, resources, onComplete, globalMulti }) {
+	return button;
+};
+
+function main({ augmentsAfter, resources, globalMulti, quests }) {
 	replaceNode(getById('main'));
 
 	let lastFrameTime = performance.now();
 	let unusedTime = 0;
-	const framesTotal = GAME_DURATION;
-	let framesLeft = framesTotal;
+	let framesPassed = 0;
 	let hasStarted = false;
 	let paused = false;
 	let pausedForAugmentChoices = false;
@@ -128,9 +137,14 @@ function main({ augmentsAfter, resources, onComplete, globalMulti }) {
 		}, {}),
 		profitMulti: 1,
 		selectedAugments: [],
+		readyQuests: [],
+		readiedQuests: new Set(),
+		completedQuests: new Set(),
 	};
 
 	const setupAugmentChoices = () => {
+		pausedForAugmentChoices = true;
+
 		const availableAugments = AUGMENTS
 			.filter(augment => !data.selectedAugments.includes(augment.id))
 			.filter(augment => !augment.condition || augment.condition(data));
@@ -245,13 +259,8 @@ function main({ augmentsAfter, resources, onComplete, globalMulti }) {
 		});
 
 		setById('time-rate', timeRate);
-		const timeLeft = Math.ceil(framesLeft / FRAMES_PER_SECOND);
-		const minutesLeft = Math.floor(timeLeft / 60);
-		const secondsLeft = timeLeft % 60;
-		setById('frames-left', `${minutesLeft}:${secondsLeft.toString().padStart(2, '0')}`);
 		setById('is-paused', paused);
 		getById('blanket').dataset.hidden = !pausedForAugmentChoices;
-		getById('game-over').dataset.hidden = framesLeft > 0;
 	};
 
 	const update = () => {
@@ -262,6 +271,30 @@ function main({ augmentsAfter, resources, onComplete, globalMulti }) {
 		Object.values(data.producers).forEach(producer => {
 			producer.count += producer.gainRate / FRAMES_PER_SECOND;
 		});
+		quests.forEach(quest => {
+			if (data.completedQuests.has(quest.id) || data.readiedQuests.has(quest.id)) {
+				return;
+			}
+
+			if (quest.condition(data)) {
+				data.readyQuests.push(quest);
+				data.readiedQuests.add(quest.id);
+
+				const questList = getById('quest-list');
+
+				let button = createQuestUI(quest, data, () => {
+					setupAugmentChoices();
+
+					if (button) {
+						questList.removeChild(button);
+					}
+					data.completedQuests.add(quest.id);
+					data.readiedQuests.remove(quest.id);
+				});
+
+				questList.appendChild(button);
+			}
+		});
 	};
 
 	const loop = () => {
@@ -269,7 +302,7 @@ function main({ augmentsAfter, resources, onComplete, globalMulti }) {
 
 		const currentTime = performance.now();
 
-		const isPaused = !hasStarted || paused || pausedForAugmentChoices || framesLeft <= 0;
+		const isPaused = !hasStarted || paused || pausedForAugmentChoices;
 
 		if (!isPaused) {
 			const elapsedTime = (currentTime - lastFrameTime) * calculateTimeRate();
@@ -278,18 +311,15 @@ function main({ augmentsAfter, resources, onComplete, globalMulti }) {
 
 		lastFrameTime = currentTime;
 
-		while (unusedTime >= FRAME_TIME && framesLeft > 0) {
-			const framesPassed = framesTotal - framesLeft;
-
+		while (unusedTime >= FRAME_TIME) {
 			if (augmentTimes.includes(framesPassed)) {
-				pausedForAugmentChoices = true;
 				setupAugmentChoices();
 				augmentTimes.splice(augmentTimes.findIndex(t => t === framesPassed), 1);
 				break;
 			}
 
 			unusedTime -= FRAME_TIME;
-			framesLeft -= 1;
+			framesPassed += 1;
 
 			calculateEarnings();
 			update();
@@ -297,15 +327,10 @@ function main({ augmentsAfter, resources, onComplete, globalMulti }) {
 
 		visuallyUpdate();
 
-		if (framesLeft > 0) {
-			requestAnimationFrame(loop);
-		}
+		requestAnimationFrame(loop);
 	};
 
 	const pageSetup = () => {
-		// Set up main
-		getById('main').dataset.hidden = false;
-
 		// Set up resources
 		const resourceList = getById('resource-list');
 		clearChildren(resourceList);
@@ -410,10 +435,6 @@ function main({ augmentsAfter, resources, onComplete, globalMulti }) {
 				};
 
 				buyButton.addEventListener('click', () => {
-					if (framesLeft <= 0) {
-						return;
-					}
-
 					const entry = data.producers[id];
 
 					const resource = data.resources[resourceId];
@@ -449,9 +470,6 @@ function main({ augmentsAfter, resources, onComplete, globalMulti }) {
 		clearChildren(getById('augment-list'));
 		getById('augments').dataset.hidden = true;
 
-		// Set up game over section
-		getById('game-over').dataset.hidden = true;
-
 		const onKeyDown = event => {
 			if (event.repeat) {
 				return;
@@ -471,12 +489,6 @@ function main({ augmentsAfter, resources, onComplete, globalMulti }) {
 		};
 		document.body.addEventListener('keydown', onKeyDown);
 		document.body.addEventListener('keyup', onKeyUp);
-
-		replaceNode(getById('game-over-button')).addEventListener('click', () => {
-			document.body.removeEventListener('keydown', onKeyDown);
-			document.body.removeEventListener('keyup', onKeyUp);
-			onComplete(data);
-		});
 	};
 
 	pageSetup();
@@ -484,47 +496,6 @@ function main({ augmentsAfter, resources, onComplete, globalMulti }) {
 
 	requestAnimationFrame(loop);
 }
-
-const updatePostGame = crossRoundData => {
-	setById('last-round-earnings', intRound(last(crossRoundData.history)));
-	setById('lifetime-best', intRound(crossRoundData.lifetimeBest));
-	setById('points', intRound(crossRoundData.points));
-
-	if (last(crossRoundData.history) === crossRoundData.lifetimeBest) {
-		getById('new-record').dataset.hidden = false;
-		setById('new-points-record', intRound(crossRoundData.lastRoundPoints));
-		getById('no-record').dataset.hidden = true;
-	} else {
-		getById('no-record').dataset.hidden = false;
-		setById('new-points-normal', intRound(crossRoundData.lastRoundPoints));
-		getById('new-record').dataset.hidden = true;
-	}
-
-	META_UPGRADES.forEach(upgrade => {
-		const button = getById(`${upgrade.id}-button`);
-		button.disabled = upgrade.cost > crossRoundData.points;
-	});
-};
-
-const STATIC_POINTS_MULTI = 1;
-const AWARD_POINTS_MULTI = 5;
-
-const META_UPGRADES = [
-	{
-		id: 'global-multi',
-		text: 'Buy 10% more global earnings',
-		cost: 10,
-		repeatable: true,
-		action: (crossRoundData, thisUpgrade) => {
-			crossRoundData.globalMulti += 0.1;
-			thisUpgrade.cost = Math.floor(thisUpgrade.cost * 1.1);
-		},
-		currentValueText: (crossRoundData, _thisUpgrade) => {
-			return `(Current value: ${intRound(crossRoundData.globalMulti * 100)}%)`
-		},
-		purchasedTimes: 0,
-	},
-]
 
 window.addEventListener('load', () => {
 	const crossRoundData = {
@@ -536,90 +507,14 @@ window.addEventListener('load', () => {
 		globalMulti: 1,
 	};
 
-	let isCurrentSceneActive = false;
-
-	const onComplete = (data) => {
-		getById('main').dataset.hidden = true;
-		getById('post-game').dataset.hidden = false;
-
-		let newPoints = data.lifetimeEarnings > 1 ? Math.log(data.lifetimeEarnings) * STATIC_POINTS_MULTI : 0;
-
-		if (data.lifetimeEarnings > crossRoundData.lifetimeBest) {
-			newPoints += AWARD_POINTS_MULTI * (Math.pow(data.lifetimeEarnings, 1 / 3) - Math.pow(crossRoundData.lifetimeBest, 1 / 3));
-
-			crossRoundData.lifetimeBest = Math.max(data.lifetimeEarnings);
-		}
-
-		crossRoundData.pointsEarned += newPoints;
-		crossRoundData.points += newPoints;
-		crossRoundData.lastRoundPoints = newPoints;
-
-		crossRoundData.history.push(data.lifetimeEarnings);
-
-		updatePostGame(crossRoundData);
-		isCurrentSceneActive = true;
-	};
-
-	const metaUpgradesList = getById('meta-upgrades');
-
-	META_UPGRADES.forEach(metaUpgrade => {
-		const priceTag = createElement('span', { text: intRound(metaUpgrade.cost), id: `${metaUpgrade.id}-price` });
-		const currentText = createElement('div', { text: metaUpgrade.currentValueText(crossRoundData, metaUpgrade) });
-		const button = createElement('button', {
-			id: `${metaUpgrade.id}-button`,
-			children: [
-				createTextNode(metaUpgrade.text),
-				createElement('div', {
-					children: [
-						createTextNode('Cost: '),
-						priceTag,
-						createTextNode(' points'),
-					],
-				}),
-				currentText,
-			],
-		});
-
-		button.addEventListener('click', () => {
-			if (!isCurrentSceneActive) {
-				return;
-			} else if (crossRoundData.points < metaUpgrade.cost) {
-				return;
-			}
-
-			metaUpgrade.action(crossRoundData, metaUpgrade);
-			metaUpgrade.purchasedTimes += 1;
-
-			crossRoundData.points -= metaUpgrade.cost;
-
-			currentText.textContent = metaUpgrade.currentValueText(crossRoundData, metaUpgrade);
-
-			if (!metaUpgrade.repeatable) {
-				button.disabled = true;
-			} else {
-				priceTag.textContent = intRound(metaUpgrade.cost);
-			}
-
-			updatePostGame(crossRoundData);
-		});
-
-		metaUpgradesList.appendChild(button);
-	});
-
 	const startGame = () => {
 		main({
 			augmentsAfter: [120, 240, 360, 480],
 			resources: RESOURCES,
-			onComplete,
-			globalMulti: crossRoundData.globalMulti,
+			globalMulti: 1,
+			quests: QUESTS,
 		});
 	};
-
-	getById('new-game').addEventListener('click', () => {
-		getById('post-game').dataset.hidden = true;
-		isCurrentSceneActive = false;
-		startGame();
-	});
 
 	startGame();
 });

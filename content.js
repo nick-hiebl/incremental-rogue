@@ -34,8 +34,9 @@ const RESOURCES = [
 	},
 ];
 
-const hasResource = resourceId => data => data.resources[resourceId].enabled;
-const hasProducer = producerId => data => data.producers[producerId].enabled;
+const resourceEnabled = resourceId => data => data.resources[resourceId].enabled;
+const producerEnabled = producerId => data => data.producers[producerId].enabled;
+const hasResource = (resourceId, amount) => data => resourceEnabled(resourceId)(data) && data.resources[resourceId].quantity >= amount;
 const hasAugment = augmentId => data => data.selectedAugments.includes(augmentId);
 const and = list => data => list.every(condition => condition(data));
 const or = list => data => list.some(condition => condition(data));
@@ -56,7 +57,16 @@ const AUGMENTS = [
 		action: data => {
 			data.producers['family-member'].count += 10;
 		},
-        condition: hasProducer('family-member'),
+        condition: producerEnabled('family-member'),
+	},
+	{
+		id: 'fast-family',
+		title: 'Fast family',
+		description: 'Family producers 20% more word of mouth',
+		action: data => {
+			data.producers['family-member'].profitMulti += 0.2;
+		},
+        condition: producerEnabled('family-member'),
 	},
 	{
 		id: 'outspoken-coworkers',
@@ -65,16 +75,16 @@ const AUGMENTS = [
 		action: data => {
 			data.producers['coworker'].profitMulti *= 2;
 		},
-        condition: hasProducer('coworker'),
+        condition: producerEnabled('coworker'),
 	},
 	{
 		id: 'noisy-friends',
 		title: 'Noisy friends',
-		description: 'Friends produce 50% more word of mouth.',
+		description: 'Friends recruit coworkers 50% faster.',
 		action: data => {
 			data.producers['friend'].profitMulti += 0.5;
 		},
-        condition: hasProducer('friend'),
+        condition: producerEnabled('friend'),
 	},
 	{
 		id: 'gullible-followers',
@@ -83,7 +93,7 @@ const AUGMENTS = [
 		action: data => {
 			data.producers['follower'].price *= 0.5;
 		},
-        condition: hasProducer('follower'),
+        condition: producerEnabled('follower'),
 	},
 	{
 		id: 'busy-followers',
@@ -92,7 +102,7 @@ const AUGMENTS = [
 		action: data => {
 			data.producers['follower'].profitMulti += 0.5;
 		},
-        condition: hasProducer('follower'),
+        condition: producerEnabled('follower'),
 	},
 	{
 		id: 'prayer-i',
@@ -101,7 +111,7 @@ const AUGMENTS = [
 		action: data => {
 			data.producers['faithful'].profitMulti += 0.6;
 		},
-        condition: hasProducer('faithful'),
+        condition: producerEnabled('faithful'),
 	},
 	{
 		id: 'prayer-ii',
@@ -128,6 +138,15 @@ const AUGMENTS = [
 		action: data => {
 			data.producers['acolyte'].profitMulti *= 2;
 		},
-        condition: hasProducer('acolyte'),
+        condition: producerEnabled('acolyte'),
 	},
+];
+
+const QUESTS = [
+    {
+        id: 'quest-1',
+        title: 'A mysterious visitor appears',
+        description: 'Better see what they have to say',
+        condition: hasResource('word-of-mouth', 30),
+    },
 ];

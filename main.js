@@ -136,7 +136,7 @@ function main({ augmentsAfter, resources, globalMulti, quests }) {
 			return map;
 		}, {}),
 		profitMulti: 1,
-		selectedAugments: [],
+		selectedAugments: new Set(),
 		readyQuests: [],
 		readiedQuests: new Set(),
 		completedQuests: new Set(),
@@ -146,7 +146,7 @@ function main({ augmentsAfter, resources, globalMulti, quests }) {
 		pausedForAugmentChoices = true;
 
 		const availableAugments = AUGMENTS
-			.filter(augment => !data.selectedAugments.includes(augment.id))
+			.filter(augment => !data.selectedAugments.has(augment.id))
 			.filter(augment => !augment.condition || augment.condition(data));
 
 		const options = selectRandomN(availableAugments, N_CHOICES);
@@ -154,7 +154,7 @@ function main({ augmentsAfter, resources, globalMulti, quests }) {
 		const onSelect = augment => {
 			augment.action(data);
 			pausedForAugmentChoices = false;
-			data.selectedAugments.push(augment.id);
+			data.selectedAugments.add(augment.id);
 			calculateEarnings();
 			getById('augment-list').appendChild(
 				createElement(
@@ -169,6 +169,25 @@ function main({ augmentsAfter, resources, globalMulti, quests }) {
 			);
 			getById('augments').dataset.hidden = false;
 		};
+
+		while (options.length < 3) {
+			const randomResource = selectRandomN(Object.values(data.resources).filter(resource => resource.enabled), 1)[0];
+
+			if (!randomResource) {
+				throw new Error('Could not find any resources to give for free');
+			}
+
+			const quantity = Math.floor(Math.random() * 9) + 2;
+
+			options.push({
+				id: `${randomResource.id}-${Math.random()}`,
+				title: `Free ${randomResource.name}`,
+				description: `Gain a free ${quantity} ${randomResource.name}`,
+				action: data => {
+					data.resources[randomResource.id].quantity += quantity;
+				},
+			});
+		}
 
 		setupAugment(getById('choice-1'), options.splice(Math.floor(Math.random() * 3), 1)[0], onSelect);
 		setupAugment(getById('choice-2'), options.splice(Math.floor(Math.random() * 2), 1)[0], onSelect);
@@ -289,7 +308,7 @@ function main({ augmentsAfter, resources, globalMulti, quests }) {
 						questList.removeChild(button);
 					}
 					data.completedQuests.add(quest.id);
-					data.readiedQuests.remove(quest.id);
+					data.readiedQuests.delete(quest.id);
 				});
 
 				questList.appendChild(button);

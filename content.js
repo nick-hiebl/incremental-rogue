@@ -37,7 +37,8 @@ const RESOURCES = [
 const resourceEnabled = resourceId => data => data.resources[resourceId].enabled;
 const producerEnabled = producerId => data => data.producers[producerId].enabled;
 const hasResource = (resourceId, amount) => data => resourceEnabled(resourceId)(data) && data.resources[resourceId].quantity >= amount;
-const hasAugment = augmentId => data => data.selectedAugments.includes(augmentId);
+const hasAugment = augmentId => data => data.selectedAugments.has(augmentId);
+const completedQuest = questId => data => data.completedQuests.has(questId);
 const and = list => data => list.every(condition => condition(data));
 const or = list => data => list.some(condition => condition(data));
 
@@ -148,5 +149,11 @@ const QUESTS = [
         title: 'A mysterious visitor appears',
         description: 'Better see what they have to say',
         condition: hasResource('word-of-mouth', 30),
+    },
+    {
+        id: 'quest-2',
+        title: 'The visitor returns',
+        description: 'They might have something else in store',
+        condition: completedQuest('quest-1'),
     },
 ];

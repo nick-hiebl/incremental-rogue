@@ -104,22 +104,20 @@ const createQuestUI = (quest, data, onQuestSelect) => {
 	return button;
 };
 
-function main({ augmentsAfter, resources, globalMulti, quests }) {
+function main({ resources, globalMulti, quests }) {
 	replaceNode(getById('main'));
 
 	let lastFrameTime = performance.now();
 	let unusedTime = 0;
-	let framesPassed = 0;
 	let hasStarted = false;
 	let paused = false;
 	let pausedForAugmentChoices = false;
-
-	const augmentTimes = augmentsAfter.map(time => time * FRAMES_PER_SECOND);
 
 	const TIME_KEYS = new Set(TIME_RATES.map(({ key }) => key));
 	const timeKeys = new Set();
 
 	const data = {
+		framesPassed: 0n,
 		producers: {},
 		resources: resources.reduce((map, resource) => {
 			map[resource.id] = {
@@ -331,14 +329,8 @@ function main({ augmentsAfter, resources, globalMulti, quests }) {
 		lastFrameTime = currentTime;
 
 		while (unusedTime >= FRAME_TIME) {
-			if (augmentTimes.includes(framesPassed)) {
-				setupAugmentChoices();
-				augmentTimes.splice(augmentTimes.findIndex(t => t === framesPassed), 1);
-				break;
-			}
-
 			unusedTime -= FRAME_TIME;
-			framesPassed += 1;
+			data.framesPassed += 1n;
 
 			calculateEarnings();
 			update();
@@ -528,7 +520,6 @@ window.addEventListener('load', () => {
 
 	const startGame = () => {
 		main({
-			augmentsAfter: [120, 240, 360, 480],
 			resources: RESOURCES,
 			globalMulti: 1,
 			quests: QUESTS,

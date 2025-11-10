@@ -140,33 +140,12 @@ function main({ resources, globalMulti, quests }) {
 		completedQuests: new Set(),
 	};
 
-	const setupAugmentChoices = () => {
-		pausedForAugmentChoices = true;
-
+	const selectRandomAugments = () => {
 		const availableAugments = AUGMENTS
 			.filter(augment => !data.selectedAugments.has(augment.id))
 			.filter(augment => !augment.condition || augment.condition(data));
 
 		const options = selectRandomN(availableAugments, N_CHOICES);
-
-		const onSelect = augment => {
-			augment.action(data);
-			pausedForAugmentChoices = false;
-			data.selectedAugments.add(augment.id);
-			calculateEarnings();
-			getById('augment-list').appendChild(
-				createElement(
-					'div',
-					{
-						children: [
-							createElement('strong', { text: augment.title }),
-							createElement('span', { text: ' ' + augment.description }),
-						],
-					},
-				),
-			);
-			getById('augments').dataset.hidden = false;
-		};
 
 		while (options.length < 3) {
 			const randomResource = selectRandomN(Object.values(data.resources).filter(resource => resource.enabled), 1)[0];
@@ -187,9 +166,41 @@ function main({ resources, globalMulti, quests }) {
 			});
 		}
 
-		setupAugment(getById('choice-1'), options.splice(Math.floor(Math.random() * 3), 1)[0], onSelect);
-		setupAugment(getById('choice-2'), options.splice(Math.floor(Math.random() * 2), 1)[0], onSelect);
-		setupAugment(getById('choice-3'), options[0], onSelect);
+		const result = [];
+		result.push(options.splice(Math.floor(Math.random() * 3), 1)[0]);
+		result.push(options.splice(Math.floor(Math.random() * 2), 1)[0]);
+		result.push(options[0]);
+
+		return result;
+	};
+
+	const setupAugmentChoices = (givenAugments) => {
+		pausedForAugmentChoices = true;
+
+		const augments = givenAugments ?? selectRandomAugments();
+
+		const onSelect = augment => {
+			augment.action(data);
+			pausedForAugmentChoices = false;
+			data.selectedAugments.add(augment.id);
+			calculateEarnings();
+			getById('augment-list').appendChild(
+				createElement(
+					'div',
+					{
+						children: [
+							createElement('strong', { text: augment.title }),
+							createElement('span', { text: ' ' + augment.description }),
+						],
+					},
+				),
+			);
+			getById('augments').dataset.hidden = false;
+		};
+
+		setupAugment(getById('choice-1'), augments[0], onSelect);
+		setupAugment(getById('choice-2'), augments[1], onSelect);
+		setupAugment(getById('choice-3'), augments[2], onSelect);
 	};
 
 	const calculateTimeRate = () => {
@@ -300,7 +311,7 @@ function main({ resources, globalMulti, quests }) {
 				const questList = getById('quest-list');
 
 				let button = createQuestUI(quest, data, () => {
-					setupAugmentChoices();
+					setupAugmentChoices(quest.choices);
 
 					if (button) {
 						questList.removeChild(button);

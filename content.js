@@ -155,5 +155,38 @@ const QUESTS = [
         title: 'The visitor returns',
         description: 'They might have something else in store',
         condition: completedQuest('quest-1'),
+        choices: [
+            {
+                id: 'test-augment-1',
+                title: 'Test augment 1',
+                description: 'Testing...',
+                action: data => {
+                    data.resources['word-of-mouth'].quantity += 1;
+                },
+            },
+            {
+                id: 'test-augment-2',
+                title: 'Test augment 2',
+                description: 'Testing...',
+                action: data => {
+                    data.resources['word-of-mouth'].quantity += 2;
+                },
+            },
+            {
+                id: 'test-augment-3',
+                title: 'Test augment 3',
+                description: 'Testing...',
+                action: data => {
+                    data.resources['word-of-mouth'].quantity += 3;
+                },
+            },
+        ],
+    },
+    {
+        id: 'quest-3',
+        title: 'Quest 3',
+        description: 'You have chosen wisely',
+        action: () => null,
+        condition: hasAugment('test-augment-2'),
     },
 ];

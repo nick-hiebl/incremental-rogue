@@ -16,7 +16,7 @@ const RESOURCES = [
 		id: 'faith',
 		name: 'Faith',
 		multi: 1,
-        inputUnit: 'word-of-mouth',
+		inputUnit: 'word-of-mouth',
 		producers: [
 			{ id: 'acolyte', earning: 5, price: 20, priceGrowthRate: 1.28, name: 'Acolytes' },
 			{ id: 'priest', earning: 25, price: 300, priceGrowthRate: 1.29, name: 'Priests' },
@@ -59,7 +59,7 @@ const AUGMENTS = [
 		action: data => {
 			data.producers['family-member'].count += 10;
 		},
-        condition: producerEnabled('family-member'),
+		condition: producerEnabled('family-member'),
 	},
 	{
 		id: 'fast-family',
@@ -68,7 +68,7 @@ const AUGMENTS = [
 		action: data => {
 			data.producers['family-member'].profitMulti += 0.2;
 		},
-        condition: producerEnabled('family-member'),
+		condition: producerEnabled('family-member'),
 	},
 	{
 		id: 'outspoken-coworkers',
@@ -77,7 +77,7 @@ const AUGMENTS = [
 		action: data => {
 			data.producers['coworker'].profitMulti *= 2;
 		},
-        condition: producerEnabled('coworker'),
+		condition: producerEnabled('coworker'),
 	},
 	{
 		id: 'noisy-friends',
@@ -86,7 +86,7 @@ const AUGMENTS = [
 		action: data => {
 			data.producers['friend'].profitMulti += 0.5;
 		},
-        condition: producerEnabled('friend'),
+		condition: producerEnabled('friend'),
 	},
 	{
 		id: 'gullible-followers',
@@ -95,7 +95,7 @@ const AUGMENTS = [
 		action: data => {
 			data.producers['follower'].price *= 0.5;
 		},
-        condition: producerEnabled('follower'),
+		condition: producerEnabled('follower'),
 	},
 	{
 		id: 'busy-followers',
@@ -104,7 +104,7 @@ const AUGMENTS = [
 		action: data => {
 			data.producers['follower'].profitMulti += 0.5;
 		},
-        condition: producerEnabled('follower'),
+		condition: producerEnabled('follower'),
 	},
 	{
 		id: 'prayer-i',
@@ -113,7 +113,7 @@ const AUGMENTS = [
 		action: data => {
 			data.producers['faithful'].profitMulti += 0.6;
 		},
-        condition: producerEnabled('faithful'),
+		condition: producerEnabled('faithful'),
 	},
 	{
 		id: 'prayer-ii',
@@ -122,7 +122,7 @@ const AUGMENTS = [
 		action: data => {
 			data.producers['faithful'].profitMulti += 0.75;
 		},
-        condition: hasAugment('prayer-i'),
+		condition: hasAugment('prayer-i'),
 	},
 	{
 		id: 'prayer-iii',
@@ -131,7 +131,7 @@ const AUGMENTS = [
 		action: data => {
 			data.producers['faithful'].profitMulti += 1.0;
 		},
-        condition: hasAugment('prayer-ii'),
+		condition: hasAugment('prayer-ii'),
 	},
 	{
 		id: 'acolyte-power',
@@ -140,84 +140,84 @@ const AUGMENTS = [
 		action: data => {
 			data.producers['acolyte'].profitMulti *= 2;
 		},
-        condition: producerEnabled('acolyte'),
+		condition: producerEnabled('acolyte'),
 	},
 ];
 
 const QUESTS = [
-    {
-        id: 'quest-1',
-        title: 'A mysterious visitor appears',
-        description: 'Better see what they have to say',
-        content: {
-            title: 'A mysterious visitor appears',
-            description: 'They\ve come to offer you some start-up assistance for your organization.',
-        },
-        condition: hasResource('word-of-mouth', 150),
-        choices: [
-            {
-                id: 'startup-coworker',
-                title: 'Employee referrals',
-                description: 'Get 100 coworkers talking and spreading the word.',
-                action: data => {
-                    data.producers['coworker'].count += 100;
-                },
-            },
-            {
-                id: 'startup-wordOfMouth',
-                title: 'Radio interview',
-                description: 'Get the word out there. Gain 1,000 word of mouth instantly.',
-                action: data => {
-                    data.resources['word-of-mouth'].quantity += 1_000;
-                },
-            },
-            {
-                id: 'startup-coworkerTools',
-                title: 'Office water cooler funding',
-                description: 'Some water coolers around your office will help get those coworkers talking 20% more.',
-                action: data => {
-                    data.producers['coworker'].profitMulti += 0.2;
-                },
-            },
-        ],
-    },
-    {
-        id: 'quest-2',
-        title: 'The visitor returns',
-        description: 'They might have something else in store',
-        condition: and([completedQuest('quest-1'), hasResource('word-of-mouth', 1_000_000)]),
-        choices: [
-            {
-                id: 'test-augment-1',
-                title: 'Test augment 1',
-                description: 'Testing...',
-                action: data => {
-                    data.resources['word-of-mouth'].quantity += 1;
-                },
-            },
-            {
-                id: 'test-augment-2',
-                title: 'Test augment 2',
-                description: 'Testing...',
-                action: data => {
-                    data.resources['word-of-mouth'].quantity += 2;
-                },
-            },
-            {
-                id: 'test-augment-3',
-                title: 'Test augment 3',
-                description: 'Testing...',
-                action: data => {
-                    data.resources['word-of-mouth'].quantity += 3;
-                },
-            },
-        ],
-    },
-    {
-        id: 'quest-3',
-        title: 'Quest 3',
-        description: 'You have chosen wisely',
-        action: () => null,
-        condition: hasAugment('test-augment-2'),
-    },
+	{
+		id: 'quest-1',
+		title: 'A mysterious visitor appears',
+		description: 'Better see what they have to say',
+		content: {
+			title: 'A mysterious visitor appears',
+			description: 'They\ve come to offer you some start-up assistance for your organization.',
+		},
+		condition: hasResource('word-of-mouth', 150),
+		choices: [
+			{
+				id: 'startup-coworker',
+				title: 'Employee referrals',
+				description: 'Get 100 coworkers talking and spreading the word.',
+				action: data => {
+					data.producers['coworker'].count += 100;
+				},
+			},
+			{
+				id: 'startup-wordOfMouth',
+				title: 'Radio interview',
+				description: 'Get the word out there. Gain 1,000 word of mouth instantly.',
+				action: data => {
+					data.resources['word-of-mouth'].quantity += 1_000;
+				},
+			},
+			{
+				id: 'startup-coworkerTools',
+				title: 'Office water cooler funding',
+				description: 'Some water coolers around your office will help get those coworkers talking 20% more.',
+				action: data => {
+					data.producers['coworker'].profitMulti += 0.2;
+				},
+			},
+		],
+	},
+	{
+		id: 'quest-2',
+		title: 'The visitor returns',
+		description: 'They might have something else in store',
+		condition: and([completedQuest('quest-1'), hasResource('word-of-mouth', 1_000_000)]),
+		choices: [
+			{
+				id: 'test-augment-1',
+				title: 'Test augment 1',
+				description: 'Testing...',
+				action: data => {
+					data.resources['word-of-mouth'].quantity += 1;
+				},
+			},
+			{
+				id: 'test-augment-2',
+				title: 'Test augment 2',
+				description: 'Testing...',
+				action: data => {
+					data.resources['word-of-mouth'].quantity += 2;
+				},
+			},
+			{
+				id: 'test-augment-3',
+				title: 'Test augment 3',
+				description: 'Testing...',
+				action: data => {
+					data.resources['word-of-mouth'].quantity += 3;
+				},
+			},
+		],
+	},
+	{
+		id: 'quest-3',
+		title: 'Quest 3',
+		description: 'You have chosen wisely',
+		action: () => null,
+		condition: hasAugment('test-augment-2'),
+	},
 ];

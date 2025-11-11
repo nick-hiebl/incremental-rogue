@@ -149,16 +149,42 @@ const QUESTS = [
         title: 'A mysterious visitor appears',
         description: 'Better see what they have to say',
         content: {
-            title: 'Someone knocks on the door in the night',
-            description: 'What will you offer them?',
+            title: 'A mysterious visitor appears',
+            description: 'They\ve come to offer you some start-up assistance for your organization.',
         },
-        condition: hasResource('word-of-mouth', 30),
+        condition: hasResource('word-of-mouth', 150),
+        choices: [
+            {
+                id: 'startup-coworker',
+                title: 'Employee referrals',
+                description: 'Get 100 coworkers talking and spreading the word.',
+                action: data => {
+                    data.producers['coworker'].count += 100;
+                },
+            },
+            {
+                id: 'startup-wordOfMouth',
+                title: 'Radio interview',
+                description: 'Get the word out there. Gain 1,000 word of mouth instantly.',
+                action: data => {
+                    data.resources['word-of-mouth'].quantity += 1_000;
+                },
+            },
+            {
+                id: 'startup-coworkerTools',
+                title: 'Office water cooler funding',
+                description: 'Some water coolers around your office will help get those coworkers talking 20% more.',
+                action: data => {
+                    data.producers['coworker'].profitMulti += 0.2;
+                },
+            },
+        ],
     },
     {
         id: 'quest-2',
         title: 'The visitor returns',
         description: 'They might have something else in store',
-        condition: completedQuest('quest-1'),
+        condition: and([completedQuest('quest-1'), hasResource('word-of-mouth', 1_000_000)]),
         choices: [
             {
                 id: 'test-augment-1',

@@ -150,6 +150,7 @@ button.play-pause {
 	line-height: 16px;
 	text-align: center;
 	align-items: center;
+	border-radius: 0px;
 }
 button.play-pause[data-paused="true"]::after {
 	content: '⏸';

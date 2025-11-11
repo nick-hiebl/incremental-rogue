@@ -337,7 +337,7 @@ function main({ resources, globalMulti, quests }) {
 		});
 
 		setById('time-rate', timeRate);
-		setById('is-paused', paused);
+		getById('is-paused').dataset.paused = paused;
 		getById('blanket').dataset.hidden = !pausedForAugmentChoices;
 	};
 
@@ -583,6 +583,10 @@ function main({ resources, globalMulti, quests }) {
 		// Set up augment list
 		clearChildren(getById('augment-list'));
 		getById('augments').dataset.hidden = true;
+
+		getById('is-paused').addEventListener('click', () => {
+			paused = !paused;
+		});
 
 		const onKeyDown = event => {
 			if (event.repeat) {

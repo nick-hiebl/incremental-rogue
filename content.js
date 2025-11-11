@@ -46,7 +46,7 @@ const AUGMENTS = [
 	{
 		id: 'hot-gossip',
 		title: 'Hot gossip',
-		description: 'Word of mouth generation from all sources increased by 30%',
+		description: 'Word of mouth generation from all sources increased by 30%.',
 		action: data => {
 			data.resources['word-of-mouth'].multi += 0.3;
 		},
@@ -54,7 +54,7 @@ const AUGMENTS = [
 	{
 		id: 'bigger-family',
 		title: 'Big family',
-		description: 'Immediate +10 family members',
+		description: 'Immediate +10 family members.',
 		action: data => {
 			data.producers['family-member'].count += 10;
 		},
@@ -63,7 +63,7 @@ const AUGMENTS = [
 	{
 		id: 'fast-family',
 		title: 'Fast family',
-		description: 'Family producers 20% more word of mouth',
+		description: 'Family producers 20% more word of mouth.',
 		action: data => {
 			data.producers['family-member'].profitMulti += 0.2;
 		},
@@ -90,7 +90,7 @@ const AUGMENTS = [
 	{
 		id: 'gullible-followers',
 		title: 'Gullible followers',
-		description: 'Followers only require half as much word of mouth to recruit',
+		description: 'Followers only require half as much word of mouth to recruit.',
 		action: data => {
 			data.producers['follower'].price *= 0.5;
 		},
@@ -99,7 +99,7 @@ const AUGMENTS = [
 	{
 		id: 'busy-followers',
 		title: 'Busy followers',
-		description: 'Followers recruit 50% more friends',
+		description: 'Followers recruit 50% more friends.',
 		action: data => {
 			data.producers['follower'].profitMulti += 0.5;
 		},
@@ -108,7 +108,7 @@ const AUGMENTS = [
 	{
 		id: 'prayer-i',
 		title: 'Prayer I',
-		description: 'Faithful produce 60% more faith',
+		description: 'Faithful produce 60% more faith.',
 		action: data => {
 			data.producers['faithful'].profitMulti += 0.6;
 		},
@@ -117,7 +117,7 @@ const AUGMENTS = [
 	{
 		id: 'prayer-ii',
 		title: 'Prayer II',
-		description: 'Faithful produce 75% more faith',
+		description: 'Faithful produce 75% more faith.',
 		action: data => {
 			data.producers['faithful'].profitMulti += 0.75;
 		},
@@ -126,7 +126,7 @@ const AUGMENTS = [
 	{
 		id: 'prayer-iii',
 		title: 'Prayer III',
-		description: 'Faithful produce 100% more faith',
+		description: 'Faithful produce 100% more faith.',
 		action: data => {
 			data.producers['faithful'].profitMulti += 1.0;
 		},
@@ -135,7 +135,7 @@ const AUGMENTS = [
 	{
 		id: 'acolyte-power',
 		title: 'Acolyte Power',
-		description: 'Acolytes produce twice as much faith',
+		description: 'Acolytes produce twice as much faith.',
 		action: data => {
 			data.producers['acolyte'].profitMulti *= 2;
 		},
@@ -148,6 +148,10 @@ const QUESTS = [
         id: 'quest-1',
         title: 'A mysterious visitor appears',
         description: 'Better see what they have to say',
+        content: {
+            title: 'Someone knocks on the door in the night',
+            description: 'What will you offer them?',
+        },
         condition: hasResource('word-of-mouth', 30),
     },
     {

@@ -44,6 +44,19 @@ const clearChildren = node => {
 	}
 };
 
+const setupAugmentHeader = content => {
+	const header = getById('choice-header');
+
+	if (!content) {
+		header.dataset.hidden = true;
+		return;
+	}
+	header.dataset.hidden = false;
+
+	setById('title', content.title, header);
+	setById('description', content.description, header);
+};
+
 const setupAugment = (element, augment, onSelect) => {
 	setById('title', augment.title, element);
 	setById('description', augment.description, element);
@@ -174,10 +187,12 @@ function main({ resources, globalMulti, quests }) {
 		return result;
 	};
 
-	const setupAugmentChoices = (givenAugments) => {
+	const setupAugmentChoices = ({ augments, headerContent }) => {
 		pausedForAugmentChoices = true;
 
-		const augments = givenAugments ?? selectRandomAugments();
+		augments = augments ?? selectRandomAugments();
+
+		setupAugmentHeader(headerContent);
 
 		const onSelect = augment => {
 			augment.action(data);
@@ -311,7 +326,7 @@ function main({ resources, globalMulti, quests }) {
 				const questList = getById('quest-list');
 
 				let button = createQuestUI(quest, data, () => {
-					setupAugmentChoices(quest.choices);
+					setupAugmentChoices({ augments: quest.choices, headerContent: quest.content });
 
 					if (button) {
 						questList.removeChild(button);

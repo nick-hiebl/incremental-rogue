@@ -19,7 +19,7 @@ h1, h2, h3, h4, h5, h6 {
 #quest-container {
 	width: 300px;
 	padding: 8px;
-	border-left: 1px solid white;
+	border-left: 1px solid #fff6;
 	min-height: 100vh;
 }
 
@@ -39,6 +39,10 @@ inline[data-align="top"] {
 	align-items: start;
 }
 
+inline[data-align="stretch"] {
+	align-items: stretch;
+}
+
 inline[data-spread] {
 	justify-content: space-between;
 }
@@ -47,6 +51,14 @@ stack {
 	display: flex;
 	flex-direction: column;
 	gap: 8px;
+}
+
+stack[data-align="center"] {
+	align-items: center;
+}
+
+stack[data-align="left"] {
+	align-items: start;
 }
 
 key {
@@ -68,6 +80,10 @@ key[data-pressed=true] {
 	color: #112;
 }
 
+*[data-gap="24"] {
+	gap: 24px;
+}
+
 #producer-list {
 	display: flex;
 	flex-direction: column;
@@ -87,12 +103,6 @@ key[data-pressed=true] {
 	align-items: center;
 }
 
-#blanket-placer {
-	display: flex;
-	flex-direction: row;
-	column-gap: 24px;
-}
-
 .choice {
 	background-color: #224;
 	border: 2px solid black;
@@ -104,6 +114,11 @@ key[data-pressed=true] {
 	align-items: center;
 	justify-content: space-between;
 	row-gap: 24px;
+}
+
+.choice.oversize {
+	width: 400px;
+	padding-block: 24px;
 }
 
 button {

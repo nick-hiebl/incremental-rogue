@@ -25,35 +25,41 @@
 			</div>
 		</inline>
 		<div id="blanket" data-hidden=true>
-			<div id="blanket-placer">
-				<div class="choice" id="choice-1">
-					<stack>
-						<h2 id="title">Choice 1</h2>
-						<div id="description">
-							This is the description of the first option!
-						</div>
-					</stack>
-					<button id="choose">Choose</button>
-				</div>
-				<div class="choice" id="choice-2">
-					<stack>
-						<h2 id="title">Choice 2</h2>
-						<div id="description">
-							This is the description of the first option!
-						</div>
-					</stack>
-					<button id="choose">Choose</button>
-				</div>
-				<div class="choice" id="choice-3">
-					<stack>
-						<h2 id="title">Choice 3</h2>
-						<div id="description">
-							This is the description of the first option!
-						</div>
-					</stack>
-					<button id="choose">Choose</button>
-				</div>
-			</div>
+			<stack data-gap="24" data-align="center">
+				<stack id="choice-header" data-align="left" class="choice oversize">
+					<h2 id="title">Title</h2>
+					<div id="description">Description</div>
+				</stack>
+				<inline data-gap="24" data-align="stretch">
+					<div class="choice" id="choice-1">
+						<stack data-align="left">
+							<h2 id="title">Choice 1</h2>
+							<div id="description">
+								This is the description of the first option!
+							</div>
+						</stack>
+						<button id="choose">Choose</button>
+					</div>
+					<div class="choice" id="choice-2">
+						<stack data-align="left">
+							<h2 id="title">Choice 2</h2>
+							<div id="description">
+								This is the description of the first option!
+							</div>
+						</stack>
+						<button id="choose">Choose</button>
+					</div>
+					<div class="choice" id="choice-3">
+						<stack data-align="left">
+							<h2 id="title">Choice 3</h2>
+							<div id="description">
+								This is the description of the first option!
+							</div>
+						</stack>
+						<button id="choose">Choose</button>
+					</div>
+				</inline>
+			</stack>
 		</div>
 		<script src="./content.js"></script>
 		<script src="./main.js"></script>

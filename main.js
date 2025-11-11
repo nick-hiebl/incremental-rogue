@@ -136,6 +136,7 @@ function main({ resources, globalMulti, quests }) {
 			map[resource.id] = {
 				name: resource.name,
 				id: resource.id,
+				inputUnit: resource.inputUnit,
 				quantity: resource.initialQuantity ?? 0,
 				earning: 0,
 				spent: 0,
@@ -308,8 +309,17 @@ function main({ resources, globalMulti, quests }) {
 
 	const update = () => {
 		Object.values(data.resources).forEach(resource => {
-			resource.quantity += resource.earning / FRAMES_PER_SECOND;
-			resource.lifetimeEarnings += resource.earning / FRAMES_PER_SECOND;
+			const shouldProduce = resource.earning / FRAMES_PER_SECOND;
+			if (resource.inputUnit) {
+				const actualProduce = Math.min(shouldProduce, data.resources[resource.inputUnit].quantity);
+
+				data.resources[resource.inputUnit].quantity -= actualProduce;
+				resource.quantity += actualProduce;
+				resource.lifetimeEarnings += actualProduce;
+			} else {
+				resource.quantity += shouldProduce;
+				resource.lifetimeEarnings += shouldProduce;
+			}
 		});
 		Object.values(data.producers).forEach(producer => {
 			producer.count += producer.gainRate / FRAMES_PER_SECOND;

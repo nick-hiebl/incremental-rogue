@@ -16,6 +16,7 @@ const RESOURCES = [
 		id: 'faith',
 		name: 'Faith',
 		multi: 1,
+        inputUnit: 'word-of-mouth',
 		producers: [
 			{ id: 'acolyte', earning: 5, price: 20, priceGrowthRate: 1.28, name: 'Acolytes' },
 			{ id: 'priest', earning: 25, price: 300, priceGrowthRate: 1.29, name: 'Priests' },

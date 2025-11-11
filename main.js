@@ -3,7 +3,7 @@ const PAUSE_KEY = 'p';
 const TIME_RATES = [
 	{ key: 'z', multi: 2 },
 	{ key: 'x', multi: 3 },
-	{ key: 'c', multi: 5 },
+	{ key: 'c', multi: 8 },
 	{ key: 'v', multi: 10 },
 ];
 
@@ -143,6 +143,8 @@ function main({ resources, globalMulti, quests }) {
 				multi: resource.multi ?? 1,
 				lifetimeEarnings: 0,
 				enabled: false,
+				consumers: [],
+				paused: false,
 			};
 
 			return map;
@@ -153,6 +155,12 @@ function main({ resources, globalMulti, quests }) {
 		readiedQuests: new Set(),
 		completedQuests: new Set(),
 	};
+
+	resources.forEach(resource => {
+		if (resource.inputUnit) {
+			data.resources[resource.inputUnit].consumers.push(resource.id);
+		}
+	});
 
 	const selectRandomAugments = () => {
 		const availableAugments = AUGMENTS
@@ -261,9 +269,35 @@ function main({ resources, globalMulti, quests }) {
 				getById(`${resource.id}-resource`).dataset.hidden = false;
 				resource.enabled = true;
 			}
+
 			setById(`${resource.id}-quantity`, intRound(resource.quantity));
-			setById(`${resource.id}-earning`, intRound(resource.earning));
 			setById(`${resource.id}-lifetime`, intRound(resource.lifetimeEarnings));
+
+			let earning = 0;
+			if (resource.paused) {
+				// Earnings are 0
+			} else if (resource.inputUnit) {
+				const inputResource = data.resources[resource.inputUnit];
+				if (resource.earning <= inputResource.earning) {
+					earning = resource.earning;
+				} else if (resource.earning <= inputResource.quantity) {
+					earning = resource.earning;
+				} else {
+					earning = Math.max(inputResource.earning, inputResource.quantity);
+				}
+			} else {
+				earning = resource.earning;
+			}
+
+			setById(`${resource.id}-earning`, intRound(earning));
+
+			const consumedRate = resource.consumers
+				.filter(consumer => !data.resources[consumer].paused)
+				.map(consumer => data.resources[consumer].earning)
+				.reduce((a, b) => a + b, 0);
+
+			getById(`${resource.id}-consumed`).dataset.hidden = consumedRate <= 0;
+			setById(`${resource.id}-consumed-rate`, intRound(consumedRate));
 		});
 
 		Object.values(data.producers).forEach(entry => {
@@ -309,6 +343,10 @@ function main({ resources, globalMulti, quests }) {
 
 	const update = () => {
 		Object.values(data.resources).forEach(resource => {
+			if (resource.paused) {
+				return;
+			}
+
 			const shouldProduce = resource.earning / FRAMES_PER_SECOND;
 			if (resource.inputUnit) {
 				const actualProduce = Math.min(shouldProduce, data.resources[resource.inputUnit].quantity);
@@ -382,18 +420,36 @@ function main({ resources, globalMulti, quests }) {
 		const resourceList = getById('resource-list');
 		clearChildren(resourceList);
 
-		resources.forEach(({ id: resourceId, name: resourceName, producers, initialQuantity }) => {
+		resources.forEach(({ id: resourceId, name: resourceName, producers, initialQuantity, inputUnit }) => {
 			const producerBlock = createElement('div');
+			const resourcePlayPause = createElement('button');
+			resourcePlayPause.classList.add('play-pause');
+
+			resourcePlayPause.dataset.paused = false;
+			resourcePlayPause.dataset.hidden = !inputUnit;
+			resourcePlayPause.addEventListener('click', () => {
+				const nowPaused = !data.resources[resourceId].paused;
+				data.resources[resourceId].paused = nowPaused;
+
+				resourcePlayPause.dataset.paused = nowPaused;
+			});
+
 			const resourceBlock = createElement('div', {
 				id: `${resourceId}-resource`,
 				children: [
-					createElement('h2', {
+					createElement('inline', {
 						children: [
-							createTextNode(resourceName + ': '),
-							createElement('span', {
-								id: `${resourceId}-quantity`,
-								text: intRound(initialQuantity ?? 0),
+
+							createElement('h2', {
+								children: [
+									createTextNode(resourceName + ': '),
+									createElement('span', {
+										id: `${resourceId}-quantity`,
+										text: intRound(initialQuantity ?? 0),
+									}),
+								],
 							}),
+							resourcePlayPause,
 						],
 					}),
 					createElement('h3', {
@@ -404,6 +460,17 @@ function main({ resources, globalMulti, quests }) {
 								text: '0',
 							}),
 							createTextNode('/s'),
+							createElement('span', {
+								id: `${resourceId}-consumed`,
+								children: [
+									createTextNode(', '),
+									createElement('span', {
+										id: `${resourceId}-consumed-rate`,
+										text: '0'
+									}),
+									createTextNode('/s consumed by other resources.')
+								],
+							}),
 						],
 					}),
 					createElement('div', {

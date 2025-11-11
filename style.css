@@ -141,3 +141,25 @@ button:not(:disabled):active {
 button:disabled {
 	opacity: 0.5;
 }
+
+button.play-pause {
+	width: 24px;
+	min-width: 0px;
+	height: 24px;
+	padding: 2px;
+	line-height: 16px;
+	text-align: center;
+	align-items: center;
+}
+button.play-pause[data-paused="true"]::after {
+	content: '⏸';
+	color: #112;
+	font-size: 1.5em;
+}
+button.play-pause[data-paused="true"] {
+	background-color: white;
+}
+button.play-pause[data-paused="false"]::after {
+	content: '▶︎';
+	font-size: 1.1em;
+}

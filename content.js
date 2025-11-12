@@ -1,3 +1,11 @@
+const resourceEnabled = resourceId => data => data.resources[resourceId].enabled;
+const producerEnabled = producerId => data => data.producers[producerId].enabled;
+const hasResource = (resourceId, amount) => data => resourceEnabled(resourceId)(data) && data.resources[resourceId].quantity >= amount;
+const hasAugment = augmentId => data => data.selectedAugments.has(augmentId);
+const completedQuest = questId => data => data.completedQuests.has(questId);
+const and = list => data => list.every(condition => condition(data));
+const or = list => data => list.some(condition => condition(data));
+
 const RESOURCES = [
 	{
 		id: 'word-of-mouth',
@@ -6,8 +14,8 @@ const RESOURCES = [
 		multi: 1,
 		producers: [
 			{ id: 'family-member', earning: 1, price: 10, priceGrowthRate: 1.3, name: 'Family members' },
-			{ id: 'coworker', earning: 3, price: 50, priceGrowthRate: 1.2, name: 'Coworkers' },
-			{ id: 'friend', earning: 1, price: 200, priceGrowthRate: 1.2, name: 'Friends', outputUnit: 'coworker' },
+			{ id: 'coworker', earning: 1.5, price: 50, priceGrowthRate: 1.2, name: 'Coworkers', condition: data => data.producers['family-member'].count > 2 },
+			{ id: 'friend', earning: 0.8, price: 200, priceGrowthRate: 1.2, name: 'Friends', outputUnit: 'coworker' },
 			{ id: 'follower', earning: 0.5, price: 1200, priceGrowthRate: 1.25, name: 'Followers', outputUnit: 'friend' },
 			{ id: 'faithful', earning: 1, price: 3000, priceGrowthRate: 1.25, name: 'Followers', outputUnit: 'faith' },
 		],
@@ -34,14 +42,6 @@ const RESOURCES = [
 		],
 	},
 ];
-
-const resourceEnabled = resourceId => data => data.resources[resourceId].enabled;
-const producerEnabled = producerId => data => data.producers[producerId].enabled;
-const hasResource = (resourceId, amount) => data => resourceEnabled(resourceId)(data) && data.resources[resourceId].quantity >= amount;
-const hasAugment = augmentId => data => data.selectedAugments.has(augmentId);
-const completedQuest = questId => data => data.completedQuests.has(questId);
-const and = list => data => list.every(condition => condition(data));
-const or = list => data => list.some(condition => condition(data));
 
 const AUGMENTS = [
 	{
@@ -151,16 +151,16 @@ const QUESTS = [
 		description: 'Better see what they have to say',
 		content: {
 			title: 'A mysterious visitor appears',
-			description: 'They\ve come to offer you some start-up assistance for your organization.',
+			description: 'They\'ve come to offer you some start-up assistance for your organization.',
 		},
 		condition: hasResource('word-of-mouth', 150),
 		choices: [
 			{
 				id: 'startup-coworker',
 				title: 'Employee referrals',
-				description: 'Get 100 coworkers talking and spreading the word.',
+				description: 'Gain 10 coworkers talking and spreading the word.',
 				action: data => {
-					data.producers['coworker'].count += 100;
+					data.producers['coworker'].count += 10;
 				},
 			},
 			{
@@ -185,7 +185,7 @@ const QUESTS = [
 		id: 'quest-2',
 		title: 'The visitor returns',
 		description: 'They might have something else in store',
-		condition: and([completedQuest('quest-1'), hasResource('word-of-mouth', 1_000_000)]),
+		condition: and([completedQuest('quest-1'), hasResource('word-of-mouth', 10_000)]),
 		choices: [
 			{
 				id: 'test-augment-1',
@@ -204,11 +204,12 @@ const QUESTS = [
 				},
 			},
 			{
-				id: 'test-augment-3',
-				title: 'Test augment 3',
-				description: 'Testing...',
+				id: 'gospels',
+				title: 'Enable gospels',
+				description: 'Enable gospels',
 				action: data => {
-					data.resources['word-of-mouth'].quantity += 3;
+					getById(`gospels-resource`).dataset.hidden = false;
+					data.resources['gospels'].enabled = true;
 				},
 			},
 		],

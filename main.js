@@ -145,6 +145,7 @@ function main({ resources, globalMulti, quests }) {
 				enabled: false,
 				consumers: [],
 				paused: false,
+				condition: resource.condition,
 			};
 
 			return map;
@@ -265,9 +266,23 @@ function main({ resources, globalMulti, quests }) {
 
 	const visuallyUpdate = () => {
 		Object.values(data.resources).forEach(resource => {
-			if (resource.quantity > 0) {
-				getById(`${resource.id}-resource`).dataset.hidden = false;
-				resource.enabled = true;
+			if (resource.enabled) {
+				// Do nothing
+			} else {
+				const someProducerEnabled = () =>
+					Object.values(data.producers)
+						.filter(producer => producer.costUnit === resource.id)
+						.some(producer => producer.count > 0 || producer.enabled);
+
+				const shouldEnable = resource.quantity > 0 || someProducerEnabled() || (resource.condition && resource.condition(data));
+
+				if (resource.id === 'faith')
+				console.log('SomeProducerOwned,', resource.id, resource.condition, shouldEnable);
+
+				if (shouldEnable) {
+					getById(`${resource.id}-resource`).dataset.hidden = false;
+					resource.enabled = true;
+				}
 			}
 
 			setById(`${resource.id}-quantity`, intRound(resource.quantity));
@@ -304,9 +319,18 @@ function main({ resources, globalMulti, quests }) {
 			const { id } = entry;
 			const costResource = data.resources[entry.costUnit];
 
-			if (costResource.quantity >= entry.price) {
-				getById(`${id}-producer-row`).dataset.hidden = false;
-				entry.enabled = true;
+			if (entry.enabled) {
+				// Do nothing
+			} else {
+				const shouldEnable = entry.count > 0
+					|| (entry.condition
+						? entry.condition(data)
+						: costResource.quantity >= entry.price);
+
+				if (shouldEnable) {
+					getById(`${id}-producer-row`).dataset.hidden = false;
+					entry.enabled = true;
+				}
 			}
 
 			setById(`${id}-count`, intRound(entry.count));

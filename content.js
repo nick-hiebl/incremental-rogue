@@ -221,4 +221,40 @@ const QUESTS = [
 		action: () => null,
 		condition: hasAugment('test-augment-2'),
 	},
+	{
+		id: 'quest-4',
+		title: 'A second quest at once?',
+		description: 'Well well well',
+		content: {
+			title: 'El secondo questo',
+			description: 'Quest number two at the same time.',
+		},
+		condition: hasResource('word-of-mouth', 250),
+		choices: [
+			{
+				id: 'startup-coworker',
+				title: 'Employee referrals',
+				description: 'Gain 10 coworkers talking and spreading the word.',
+				action: data => {
+					data.producers['coworker'].count += 10;
+				},
+			},
+			{
+				id: 'startup-wordOfMouth',
+				title: 'Radio interview',
+				description: 'Get the word out there. Gain 1,000 word of mouth instantly.',
+				action: data => {
+					data.resources['word-of-mouth'].quantity += 1_000;
+				},
+			},
+			{
+				id: 'startup-coworkerTools',
+				title: 'Office water cooler funding',
+				description: 'Some water coolers around your office will help get those coworkers talking 20% more.',
+				action: data => {
+					data.producers['coworker'].profitMulti += 0.2;
+				},
+			},
+		],
+	},
 ];

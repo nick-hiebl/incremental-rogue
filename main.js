@@ -197,7 +197,7 @@ function main({ resources, globalMulti, quests }) {
 		return result;
 	};
 
-	const setupAugmentChoices = ({ augments, headerContent }) => {
+	const setupAugmentChoices = ({ augments, headerContent, quest, triggerButton }) => {
 		pausedForAugmentChoices = true;
 
 		augments = augments ?? selectRandomAugments();
@@ -205,6 +205,14 @@ function main({ resources, globalMulti, quests }) {
 		setupAugmentHeader(headerContent);
 
 		const onSelect = augment => {
+			if (triggerButton) {
+				const questList = getById('quest-list');
+				questList.removeChild(triggerButton);
+			}
+
+			data.completedQuests.add(quest.id);
+			data.readiedQuests.delete(quest.id);
+
 			augment.action(data);
 			pausedForAugmentChoices = false;
 			data.selectedAugments.add(augment.id);
@@ -226,6 +234,10 @@ function main({ resources, globalMulti, quests }) {
 		setupAugment(getById('choice-1'), augments[0], onSelect);
 		setupAugment(getById('choice-2'), augments[1], onSelect);
 		setupAugment(getById('choice-3'), augments[2], onSelect);
+	};
+
+	const cancelAugment = () => {
+		pausedForAugmentChoices = false;
 	};
 
 	const calculateTimeRate = () => {
@@ -398,13 +410,12 @@ function main({ resources, globalMulti, quests }) {
 				const questList = getById('quest-list');
 
 				let button = createQuestUI(quest, data, () => {
-					setupAugmentChoices({ augments: quest.choices, headerContent: quest.content });
-
-					if (button) {
-						questList.removeChild(button);
-					}
-					data.completedQuests.add(quest.id);
-					data.readiedQuests.delete(quest.id);
+					setupAugmentChoices({
+						augments: quest.choices,
+						headerContent: quest.content,
+						quest,
+						triggerButton: button,
+					});
 				});
 
 				questList.appendChild(button);
@@ -590,6 +601,10 @@ function main({ resources, globalMulti, quests }) {
 			});
 
 			resourceList.appendChild(resourceBlock);
+		});
+
+		getById('cancel-quest').addEventListener('click', () => {
+			cancelAugment();
 		});
 
 		// Set up time box

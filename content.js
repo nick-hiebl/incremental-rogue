@@ -233,7 +233,7 @@ const QUESTS = [
 		choices: [
 			{
 				id: 'startup-coworker',
-				title: 'Employee referrals',
+				title: 'A test',
 				description: 'Gain 10 coworkers talking and spreading the word.',
 				action: data => {
 					data.producers['coworker'].count += 10;

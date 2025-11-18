@@ -89,10 +89,15 @@ function createTextNode(text) {
 	return document.createTextNode(text);
 }
 
-function createElement(elementName, { children, text, id, classList } = {}) {
+function createElement(elementName, { children, text, id, classList, dataset } = {}) {
 	const element = document.createElement(elementName);
 	if (id) {
 		element.id = id;
+	}
+	if (dataset) {
+		Object.entries(dataset).forEach(([key, value]) => {
+			element.dataset[key] = value;
+		});
 	}
 	if (classList) {
 		classList.forEach(className => {
@@ -124,13 +129,15 @@ const createQuestUI = (quest, data, onQuestSelect) => {
 
 const createChoiceItem = (choice, data, onChoiceSelect) => {
 	const button = createElement('button', { id: 'choose', text: 'Choose' });
-
 	button.addEventListener('click', onChoiceSelect);
 
 	const choiceUI = createElement('div', {
 		classList: ['choice'],
 		children: [
 			createElement('stack', {
+				dataset: {
+					align: 'left',
+				},
 				children: [
 					createElement('h2', { text: choice.title }),
 					createElement('div', { text: choice.description }),

@@ -247,14 +247,6 @@ const QUESTS = [
 					data.resources['word-of-mouth'].quantity += 1_000;
 				},
 			},
-			{
-				id: 'startup-coworkerTools',
-				title: 'Office water cooler funding',
-				description: 'Some water coolers around your office will help get those coworkers talking 20% more.',
-				action: data => {
-					data.producers['coworker'].profitMulti += 0.2;
-				},
-			},
 		],
 	},
 ];

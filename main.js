@@ -89,10 +89,15 @@ function createTextNode(text) {
 	return document.createTextNode(text);
 }
 
-function createElement(elementName, { children, text, id } = {}) {
+function createElement(elementName, { children, text, id, classList } = {}) {
 	const element = document.createElement(elementName);
 	if (id) {
 		element.id = id;
+	}
+	if (classList) {
+		classList.forEach(className => {
+			element.classList.add(className);
+		});
 	}
 	if (text) {
 		element.textContent = text;
@@ -115,6 +120,27 @@ const createQuestUI = (quest, data, onQuestSelect) => {
 	button.addEventListener('click', () => onQuestSelect());
 
 	return button;
+};
+
+const createChoiceItem = (choice, data, onChoiceSelect) => {
+	const button = createElement('button', { id: 'choose', text: 'Choose' });
+
+	button.addEventListener('click', onChoiceSelect);
+
+	const choiceUI = createElement('div', {
+		classList: ['choice'],
+		children: [
+			createElement('stack', {
+				children: [
+					createElement('h2', { text: choice.title }),
+					createElement('div', { text: choice.description }),
+				],
+			}),
+			button,
+		],
+	});
+
+	return choiceUI;
 };
 
 function main({ resources, globalMulti, quests }) {
@@ -231,9 +257,13 @@ function main({ resources, globalMulti, quests }) {
 			getById('augments').dataset.hidden = false;
 		};
 
-		setupAugment(getById('choice-1'), augments[0], onSelect);
-		setupAugment(getById('choice-2'), augments[1], onSelect);
-		setupAugment(getById('choice-3'), augments[2], onSelect);
+		const choiceList = getById('choice-list');
+		clearChildren(choiceList);
+
+		augments.forEach(augment => {
+			const choiceUI = createChoiceItem(augment, data, () => onSelect(augment));
+			choiceList.appendChild(choiceUI);
+		});
 	};
 
 	const cancelAugment = () => {
@@ -287,9 +317,6 @@ function main({ resources, globalMulti, quests }) {
 						.some(producer => producer.count > 0 || producer.enabled);
 
 				const shouldEnable = resource.quantity > 0 || someProducerEnabled() || (resource.condition && resource.condition(data));
-
-				if (resource.id === 'faith')
-				console.log('SomeProducerOwned,', resource.id, resource.condition, shouldEnable);
 
 				if (shouldEnable) {
 					getById(`${resource.id}-resource`).dataset.hidden = false;

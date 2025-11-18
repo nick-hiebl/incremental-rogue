@@ -130,6 +130,7 @@ const createQuestUI = (quest, data, onQuestSelect) => {
 const createChoiceItem = (choice, data, onChoiceSelect) => {
 	const button = createElement('button', { id: 'choose', text: 'Choose' });
 	button.addEventListener('click', onChoiceSelect);
+	button.disabled = data.selectedAugments.has(choice.id) || (choice.condition?.(data) === false);
 
 	const choiceUI = createElement('div', {
 		classList: ['choice'],

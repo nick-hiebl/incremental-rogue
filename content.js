@@ -238,6 +238,7 @@ const QUESTS = [
 				action: data => {
 					data.producers['coworker'].count += 10;
 				},
+				condition: hasResource('word-of-mouth', 10_000),
 			},
 			{
 				id: 'startup-wordOfMouth',

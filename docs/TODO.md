@@ -11,8 +11,6 @@ The player is presented with several branching choices in terms of how they inte
 
 ## More fine-grained tasks to be implemented
 
-- Quest options can have requirements, making those options locked unless those requirements are met.
-- Augments with matching ids can show in hard-coded options, but cannot be selected multiple times.
 - Breakdown of what parts of game state are specific to the current act, and which belong to the overall run (facilitating the act system).
 - Action available on a quest option which allows moving the game to a new act.
 - Game state persists to local storage.

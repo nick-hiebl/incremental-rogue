@@ -179,6 +179,14 @@ const QUESTS = [
 					data.producers['coworker'].profitMulti += 0.2;
 				},
 			},
+			{
+				id: 'sell-your-soul',
+				title: 'Sell your soul',
+				description: 'A little blood oath never hurt anybody, right?',
+				action: () => {
+					document.body.dataset.theme = 'red';
+				},
+			},
 		],
 	},
 	{

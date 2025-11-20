@@ -410,6 +410,10 @@ function main({ resources, globalMulti, quests }) {
 		setById('time-rate', timeRate);
 		getById('is-paused').dataset.paused = paused;
 		getById('blanket').dataset.hidden = !pausedForAugmentChoices;
+		const seconds = data.framesPassed / 20n;
+		const minutes = seconds / 60n;
+		const hours = minutes / 60n;
+		setById('time-passed', `${hours}:${(minutes % 60n).toString().padStart(2, '0')}:${(seconds % 60n).toString().padStart(2, '0')}`)
 	};
 
 	const update = () => {
@@ -586,6 +590,7 @@ function main({ resources, globalMulti, quests }) {
 					{
 						id: `${id}-producer-row`,
 						children: [
+							buyButton,
 							createTextNode(`${name}: `),
 							createElement('span', {
 								id: `${id}-count`,
@@ -597,7 +602,6 @@ function main({ resources, globalMulti, quests }) {
 								text: round(others.earning),
 							}),
 							createTextNode(` ${outputName}/s each.`),
-							buyButton,
 						],
 					},
 				);

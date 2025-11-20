@@ -1,6 +1,14 @@
 body {
-	background-color: #112;
-	color: white;
+	--background-color: #112;
+	--blanket-fill: #0009;
+	--modal-fill: #224;
+	--text-color: white;
+	--border: #fff6;
+	--border-button-hover: #0ff;
+	--border-button-pressed: #f0f;
+
+	background-color: var(--background-color);
+	color: var(--text-color);
 	font-family: Arial, Helvetica, sans-serif;
 	margin: 0;
 }
@@ -19,7 +27,7 @@ h1, h2, h3, h4, h5, h6 {
 #quest-container {
 	width: 300px;
 	padding: 8px;
-	border-left: 1px solid #fff6;
+	border-left: 1px solid var(--border);
 	min-height: 100vh;
 	box-sizing: border-box;
 }
@@ -65,7 +73,7 @@ stack[data-align="left"] {
 key {
 	font-family: monospace;
 
-	--color: white;
+	--color: var(--text-color);
 
 	color: var(--color);
 
@@ -78,7 +86,7 @@ key {
 
 key[data-pressed=true] {
 	background-color: var(--color);
-	color: #112;
+	color: var(--background-color);
 }
 
 *[data-gap="24"] {
@@ -92,7 +100,7 @@ key[data-pressed=true] {
 }
 
 #blanket {
-	background-color: #0009;
+	background-color: var(--blanket-fill);
 	position: absolute;
 	width: 100vw;
 	height: 100vh;
@@ -105,7 +113,7 @@ key[data-pressed=true] {
 }
 
 .choice {
-	background-color: #224;
+	background-color: var(--modal-fill);
 	border: 2px solid black;
 	display: flex;
 	flex-direction: column;
@@ -126,17 +134,17 @@ button {
 	min-width: 140px;
 	padding: 4px 12px;
 	background-color: transparent;
-	color: white;
-	border: 2px solid white;
+	color: var(--text-color);
+	border: 2px solid var(--text-color);
 	border-radius: 2px;
 }
 
 button:not(:disabled):hover {
-	border-color: #0ff;
+	border-color: var(--border-button-hover);
 }
 
 button:not(:disabled):active {
-	border-color: #f0f;
+	border-color: var(--border-button-pressed);
 }
 
 button:disabled {
@@ -155,11 +163,11 @@ button.play-pause {
 }
 button.play-pause[data-paused="true"]::after {
 	content: '⏸';
-	color: #112;
+	color: var(--background-color);
 	font-size: 1.5em;
 }
 button.play-pause[data-paused="true"] {
-	background-color: white;
+	background-color: var(--text-color);
 }
 button.play-pause[data-paused="false"]::after {
 	content: '▶︎';

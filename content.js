@@ -6,255 +6,77 @@ const completedQuest = questId => data => data.completedQuests.has(questId);
 const and = list => data => list.every(condition => condition(data));
 const or = list => data => list.some(condition => condition(data));
 
+const EIGHT_BILLION = 8_000_000_000;
+
 const RESOURCES = [
+	{
+		id: '__unconverted',
+		name: '[TECHNICAL] Unconverted citizens',
+		initialQuantity: EIGHT_BILLION,
+		producers: [],
+		hidden: true,
+	},
 	{
 		id: 'word-of-mouth',
 		name: 'Word of mouth',
-		initialQuantity: 10,
+		initialQuantity: 20,
 		multi: 1,
 		producers: [
-			{ id: 'family-member', earning: 1, price: 10, priceGrowthRate: 1.3, name: 'Family members' },
-			{ id: 'coworker', earning: 1.5, price: 50, priceGrowthRate: 1.2, name: 'Coworkers', condition: data => data.producers['family-member'].count > 2 },
-			{ id: 'friend', earning: 0.8, price: 200, priceGrowthRate: 1.2, name: 'Friends', outputUnit: 'coworker' },
-			{ id: 'follower', earning: 0.5, price: 1200, priceGrowthRate: 1.25, name: 'Followers', outputUnit: 'friend' },
-			{ id: 'faithful', earning: 1, price: 3000, priceGrowthRate: 1.25, name: 'Followers', outputUnit: 'faith' },
+			{ id: 'facebook-post', earning: 1, price: 10, priceGrowthRate: 1.2, name: 'Facebook posts' },
+			{ id: 'facebook-group', earning: 1, price: 1_000, priceGrowthRate: 2, name: 'Facebook groups', outputUnit: 'facebook-post' },
+			{ id: 'reddit-comment', earning: 5, price: 200, priceGrowthRate: 1.2, name: 'Reddit comments' },
+			{ id: 'subreddit', earning: 0.5, price: 20_000, priceGrowthRate: 3, name: 'Subreddits', outputUnit: 'reddit-comment' },
 		],
 	},
 	{
-		id: 'faith',
-		name: 'Faith',
+		id: 'followers',
+		name: 'Followers',
+		initialQuantity: 0,
 		multi: 1,
-		inputUnit: 'word-of-mouth',
+		inputUnit: '__unconverted',
 		producers: [
-			{ id: 'acolyte', earning: 5, price: 20, priceGrowthRate: 1.28, name: 'Acolytes' },
-			{ id: 'priest', earning: 25, price: 300, priceGrowthRate: 1.29, name: 'Priests' },
-			{ id: 'monk', earning: 1, price: 900, priceGrowthRate: 1.2, name: 'Monks', outputUnit: 'gospels' },
+			{ id: 'fans', earning: 1, price: 100, costUnit: 'word-of-mouth', outputUnit: 'word-of-mouth', priceGrowthRate: 1.3, name: 'Fans', outputUnit: 'followers' },
 		],
-	},
-	{
-		id: 'gospels',
-		name: 'Gospels',
-		multi: 1,
-		producers: [
-			{ id: 'scribe', earning: 2, price: 12, priceGrowthRate: 1.2, name: 'Scribes' },
-			{ id: 'theologian', earning: 5, price: 75, priceGrowthRate: 1.25, name: 'Theologians' },
-			{ id: 'bible-assembler', earning: 12, price: 200, priceGrowthRate: 1.24, name: 'Bible assemblers' },
-		],
-	},
+	}
 ];
 
-const AUGMENTS = [
-	{
-		id: 'hot-gossip',
-		title: 'Hot gossip',
-		description: 'Word of mouth generation from all sources increased by 30%.',
-		action: data => {
-			data.resources['word-of-mouth'].multi += 0.3;
-		},
-	},
-	{
-		id: 'bigger-family',
-		title: 'Big family',
-		description: 'Immediate +10 family members.',
-		action: data => {
-			data.producers['family-member'].count += 10;
-		},
-		condition: producerEnabled('family-member'),
-	},
-	{
-		id: 'fast-family',
-		title: 'Fast family',
-		description: 'Family producers 20% more word of mouth.',
-		action: data => {
-			data.producers['family-member'].profitMulti += 0.2;
-		},
-		condition: producerEnabled('family-member'),
-	},
-	{
-		id: 'outspoken-coworkers',
-		title: 'Outspoken coworkers',
-		description: 'Coworkers produce twice as much word of mouth!',
-		action: data => {
-			data.producers['coworker'].profitMulti *= 2;
-		},
-		condition: producerEnabled('coworker'),
-	},
-	{
-		id: 'noisy-friends',
-		title: 'Noisy friends',
-		description: 'Friends recruit coworkers 50% faster.',
-		action: data => {
-			data.producers['friend'].profitMulti += 0.5;
-		},
-		condition: producerEnabled('friend'),
-	},
-	{
-		id: 'gullible-followers',
-		title: 'Gullible followers',
-		description: 'Followers only require half as much word of mouth to recruit.',
-		action: data => {
-			data.producers['follower'].price *= 0.5;
-		},
-		condition: producerEnabled('follower'),
-	},
-	{
-		id: 'busy-followers',
-		title: 'Busy followers',
-		description: 'Followers recruit 50% more friends.',
-		action: data => {
-			data.producers['follower'].profitMulti += 0.5;
-		},
-		condition: producerEnabled('follower'),
-	},
-	{
-		id: 'prayer-i',
-		title: 'Prayer I',
-		description: 'Faithful produce 60% more faith.',
-		action: data => {
-			data.producers['faithful'].profitMulti += 0.6;
-		},
-		condition: producerEnabled('faithful'),
-	},
-	{
-		id: 'prayer-ii',
-		title: 'Prayer II',
-		description: 'Faithful produce 75% more faith.',
-		action: data => {
-			data.producers['faithful'].profitMulti += 0.75;
-		},
-		condition: hasAugment('prayer-i'),
-	},
-	{
-		id: 'prayer-iii',
-		title: 'Prayer III',
-		description: 'Faithful produce 100% more faith.',
-		action: data => {
-			data.producers['faithful'].profitMulti += 1.0;
-		},
-		condition: hasAugment('prayer-ii'),
-	},
-	{
-		id: 'acolyte-power',
-		title: 'Acolyte Power',
-		description: 'Acolytes produce twice as much faith.',
-		action: data => {
-			data.producers['acolyte'].profitMulti *= 2;
-		},
-		condition: producerEnabled('acolyte'),
-	},
-];
+const AUGMENTS = [];
 
 const QUESTS = [
 	{
-		id: 'quest-1',
-		title: 'A mysterious visitor appears',
-		description: 'Better see what they have to say',
+		id: 'intro-word-of-mouth',
+		title: 'An unexpected email appears',
+		description: 'It seems you\'ve attracted some attention',
 		content: {
-			title: 'A mysterious visitor appears',
-			description: 'They\'ve come to offer you some start-up assistance for your organization.',
+			title: 'From: supporter@unknown.inc',
+			description:
+				`I see you're trying to spread the word a little. Perhaps I could help you out somewhat.
+				I specialise in digital outreach. I have a few plans that might help.`,
 		},
-		condition: hasResource('word-of-mouth', 150),
+		condition: hasResource('word-of-mouth', 500),
 		choices: [
 			{
-				id: 'startup-coworker',
-				title: 'Employee referrals',
-				description: 'Gain 10 coworkers talking and spreading the word.',
+				id: 'facebook-posting-rewards',
+				title: 'Posting rewards',
+				description: 'Your Facebook posts on their own will generate 50% less word of mouth, but your Facebook groups will generate 50% more posts.',
 				action: data => {
-					data.producers['coworker'].count += 10;
+					data.producers['facebook-post'].profitMulti -= 0.5;
+					data.producers['facebook-group'].profitMulti += 0.5;
 				},
 			},
 			{
-				id: 'startup-wordOfMouth',
-				title: 'Radio interview',
-				description: 'Get the word out there. Gain 1,000 word of mouth instantly.',
+				id: 'engagement-baiting',
+				title: 'Engagement baiting',
+				description: 'Your Facebook posts will generate 100% more engagement, but your Facebook groups will produce posts at a 20% slower rate.',
 				action: data => {
-					data.resources['word-of-mouth'].quantity += 1_000;
+					data.producers['facebook-post'].profitMulti += 1.0;
+					data.producers['facebook-group'].profitMulti -= 0.2;
 				},
 			},
 			{
-				id: 'startup-coworkerTools',
-				title: 'Office water cooler funding',
-				description: 'Some water coolers around your office will help get those coworkers talking 20% more.',
-				action: data => {
-					data.producers['coworker'].profitMulti += 0.2;
-				},
-			},
-			{
-				id: 'sell-your-soul',
-				title: 'Sell your soul',
-				description: 'A little blood oath never hurt anybody, right?',
-				action: () => {
-					document.body.dataset.theme = 'red';
-				},
-			},
-		],
-	},
-	{
-		id: 'quest-2',
-		title: 'The visitor returns',
-		description: 'They might have something else in store',
-		condition: and([completedQuest('quest-1'), hasResource('word-of-mouth', 10_000)]),
-		choices: [
-			{
-				id: 'test-augment-1',
-				title: 'Test augment 1',
-				description: 'Testing...',
-				action: data => {
-					data.resources['word-of-mouth'].quantity += 1;
-				},
-			},
-			{
-				id: 'test-augment-2',
-				title: 'Test augment 2',
-				description: 'Testing...',
-				action: data => {
-					data.resources['word-of-mouth'].quantity += 2;
-				},
-			},
-			{
-				id: 'gospels',
-				title: 'Enable gospels',
-				description: 'Enable gospels',
-				action: data => {
-					getById(`gospels-resource`).dataset.hidden = false;
-					data.resources['gospels'].enabled = true;
-				},
-			},
-		],
-	},
-	{
-		id: 'quest-3',
-		title: 'Quest 3',
-		description: 'You have chosen wisely',
-		action: () => null,
-		condition: hasAugment('test-augment-2'),
-	},
-	{
-		id: 'quest-4',
-		title: 'A second quest at once?',
-		description: 'Well well well',
-		content: {
-			title: 'El secondo questo',
-			description: 'Quest number two at the same time.',
-		},
-		condition: hasResource('word-of-mouth', 250),
-		choices: [
-			{
-				id: 'startup-coworker',
-				title: 'A test',
-				description: 'Gain 10 coworkers talking and spreading the word.',
-				action: data => {
-					data.producers['coworker'].count += 10;
-				},
-				condition: hasResource('word-of-mouth', 10_000),
-			},
-			{
-				id: 'startup-wordOfMouth',
-				title: 'Radio interview',
-				description: 'Get the word out there. Gain 1,000 word of mouth instantly.',
-				action: data => {
-					data.resources['word-of-mouth'].quantity += 1_000;
-				},
+				id: 'ignore-supporter-unknown',
+				title: 'Ignore',
+				description: `Don't send any reply.`,
 			},
 		],
 	},

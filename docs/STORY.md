@@ -7,6 +7,7 @@ The game starts with a standardised Act I, and from there branches into three ma
 ## Major branches
 
 - Anti-science
+- Business
 - Occult power
 - New religion
 
@@ -18,6 +19,11 @@ The game starts with a standardised Act I, and from there branches into three ma
 - Anti-GMO
 - UFO investigator
 - QAnon?
+
+### Business
+
+- AI company
+- DNA research
 
 ### Occult power
 

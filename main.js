@@ -54,7 +54,11 @@ const setupAugmentHeader = content => {
 	header.dataset.hidden = false;
 
 	setById('title', content.title, header);
-	setById('description', content.description, header);
+	const desc = getById('description', header);
+	clearChildren(desc);
+	content.description.split('\n').forEach(line => {
+		desc.appendChild(createElement('div', { text: line.trim() }));
+	});
 };
 
 const setupAugment = (element, augment, onSelect) => {
@@ -141,7 +145,9 @@ const createChoiceItem = (choice, data, onChoiceSelect) => {
 				},
 				children: [
 					createElement('h2', { text: choice.title }),
-					createElement('div', { text: choice.description }),
+					...choice.description.split('\n').map(line =>
+						createElement('div', { text: line }),
+					),
 				],
 			}),
 			button,
@@ -167,6 +173,7 @@ function main({ resources, globalMulti, quests }) {
 		framesPassed: 0n,
 		producers: {},
 		resources: resources.reduce((map, resource) => {
+			// Init resource
 			map[resource.id] = {
 				name: resource.name,
 				id: resource.id,
@@ -180,6 +187,7 @@ function main({ resources, globalMulti, quests }) {
 				consumers: [],
 				paused: false,
 				condition: resource.condition,
+				hidden: resource.hidden,
 			};
 
 			return map;
@@ -190,6 +198,8 @@ function main({ resources, globalMulti, quests }) {
 		readiedQuests: new Set(),
 		completedQuests: new Set(),
 	};
+
+	window.__DATA = data;
 
 	resources.forEach(resource => {
 		if (resource.inputUnit) {
@@ -247,7 +257,7 @@ function main({ resources, globalMulti, quests }) {
 			data.completedQuests.add(quest.id);
 			data.readiedQuests.delete(quest.id);
 
-			augment.action(data);
+			augment.action?.(data);
 			pausedForAugmentChoices = false;
 			data.selectedAugments.add(augment.id);
 			calculateEarnings();
@@ -316,12 +326,12 @@ function main({ resources, globalMulti, quests }) {
 
 	const visuallyUpdate = () => {
 		Object.values(data.resources).forEach(resource => {
-			if (resource.enabled) {
+			if (resource.enabled || resource.hidden) {
 				// Do nothing
 			} else {
 				const someProducerEnabled = () =>
 					Object.values(data.producers)
-						.filter(producer => producer.costUnit === resource.id)
+						.filter(producer => producer.baseUnit === resource.id)
 						.some(producer => producer.count > 0 || producer.enabled);
 
 				const shouldEnable = resource.quantity > 0 || someProducerEnabled() || (resource.condition && resource.condition(data));
@@ -562,6 +572,8 @@ function main({ resources, globalMulti, quests }) {
 			resourceBlock.dataset.hidden = true;
 
 			producers.forEach(({ id, name, outputUnit, ...others }) => {
+				const costResourceName = others.costUnit ? data.resources[others.costUnit].name : resourceName;
+
 				const buyButton = createElement('button', {
 					id: `${id}-buy`,
 					children: [
@@ -573,7 +585,7 @@ function main({ resources, globalMulti, quests }) {
 									id: `${id}-price`,
 									text: round(others.price),
 								}),
-								createTextNode(' ' + resourceName),
+								createTextNode(' ' + costResourceName),
 							],
 						}),
 					],
@@ -609,29 +621,31 @@ function main({ resources, globalMulti, quests }) {
 
 				producerBlock.appendChild(row);
 
+				// Init producer
 				data.producers[id] = {
 					id,
 					name,
+					costUnit: resourceId,
+					baseUnit: resourceId,
 					...others,
 					profitMulti: 1,
 					gainMulti: 1,
 					gainRate: 0,
 					count: 0,
 					outputUnit: output,
-					costUnit: resourceId,
 					enabled: false,
 				};
 
 				buyButton.addEventListener('click', () => {
 					const entry = data.producers[id];
 
-					const resource = data.resources[resourceId];
+					const costResource = others.costUnit ? data.resources[others.costUnit] : data.resources[resourceId];
 
-					if (resource.quantity >= entry.price) {
+					if (costResource.quantity >= entry.price) {
 						hasStarted = true;
 
-						resource.quantity -= entry.price;
-						resource.spent += entry.price;
+						costResource.quantity -= entry.price;
+						costResource.spent += entry.price;
 						entry.price *= entry.priceGrowthRate;
 						entry.count += 1;
 						calculateEarnings();
